@@ -261,3 +261,5 @@ svg .area { fill: var(--accent-soft); }
 
 footer.end { max-width: 1180px; margin: 0 auto; padding-block: 24px 48px; border-top: 1px solid var(--rule); font: 500 13px/1.5 var(--display); color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
 footer.end a { color: var(--accent); }
+footer.end .credit { flex-basis: 100%; font: 600 13px/1.5 var(--mono); letter-spacing: .04em; color: var(--ink); }
+footer.end .credit a { text-decoration: none; border-bottom: 1px solid currentColor; }
