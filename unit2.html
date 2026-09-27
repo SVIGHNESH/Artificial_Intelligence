@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit II: Search Strategies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&display=swap">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="course">
+    <a href="index.html">All units</a>
+    <a href="unit1.html">← Unit I</a>
+    <span>BCS701 · Artificial Intelligence · AKTU</span>
+  </div>
+  <h1><span class="unit-no">Unit II.</span> Problem Solving &amp; Search Strategies</h1>
+  <p class="scope">Uninformed search: BFS, DFS, iterative deepening. Informed search: greedy best-first, A*, heuristics and optimisation. Hill climbing, simulated annealing, constraint satisfaction problems. Game playing: minimax, alpha-beta pruning, stochastic and partially observable games.</p>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Topics">
+    <p>Topics</p>
+    <ol>
+      <li><a href="#basics">Search basics</a></li>
+      <li><a href="#uninformed">Uninformed search</a></li>
+      <li><a href="#compare-uninformed">Comparison table</a></li>
+      <li><a href="#informed">Informed search</a></li>
+      <li><a href="#astar">A* search</a></li>
+      <li><a href="#heuristics">Heuristics</a></li>
+      <li><a href="#local">Hill climbing</a></li>
+      <li><a href="#annealing">Simulated annealing</a></li>
+      <li><a href="#csp">Constraint satisfaction</a></li>
+      <li><a href="#minimax">Minimax</a></li>
+      <li><a href="#alphabeta">Alpha-beta pruning</a></li>
+      <li><a href="#stochastic">Stochastic &amp; partial games</a></li>
+      <li><a class="case" href="#cases">Case studies</a></li>
+      <li><a href="#revision">Quick revision</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="tip">
+      <b class="lbl">What professors usually ask from this unit</b>
+      <ul>
+        <li>"Which search strategy would you use for this scenario, and why?" Answer with the four criteria: complete, optimal, time, space.</li>
+        <li>A graph with costs and heuristic values: trace BFS/DFS/UCS/Greedy/A* and write the order of expansion.</li>
+        <li>A game tree: find the minimax value and show which branches alpha-beta prunes.</li>
+        <li>A real problem (timetable, map colouring, puzzle): formulate it as a CSP.</li>
+      </ul>
+    </div>
+
+    <!-- 1 -->
+    <section id="basics">
+      <h2><span class="num">01</span>Search basics</h2>
+      <p>Search explores the state space by building a <strong>search tree</strong>: the root is the initial state, and <strong>expanding</strong> a node generates its children using the actions.</p>
+      <dl class="terms">
+        <dt>Node</dt><dd>Data structure holding <code>state</code>, <code>parent</code>, <code>action</code>, <code>path-cost g(n)</code> and depth.</dd>
+        <dt>Frontier (open list)</dt><dd>Nodes generated but not yet expanded.</dd>
+        <dt>Explored set (closed list)</dt><dd>States already expanded. Used by <strong>graph search</strong> to avoid repeated states and loops. <strong>Tree search</strong> has no explored set.</dd>
+        <dt>Strategy</dt><dd>Which frontier node to expand next. This is the only thing that differs between algorithms.</dd>
+      </dl>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Frontier type</th><th>Pops</th><th>Used by</th></tr></thead>
+          <tbody>
+            <tr><td>FIFO queue</td><td>Oldest node</td><td>BFS</td></tr>
+            <tr><td>LIFO stack</td><td>Newest node</td><td>DFS, DLS, IDDFS</td></tr>
+            <tr><td>Priority queue</td><td>Lowest priority value</td><td>UCS (g), Greedy (h), A* (g+h)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Measuring performance</h3>
+      <div class="split">
+        <div><h5>Completeness</h5><p>Is it guaranteed to find a solution if one exists?</p></div>
+        <div><h5>Optimality</h5><p>Does it find the lowest-cost solution?</p></div>
+        <div><h5>Time complexity</h5><p>Number of nodes generated.</p></div>
+        <div><h5>Space complexity</h5><p>Maximum number of nodes kept in memory.</p></div>
+      </div>
+      <p>Complexity is written with <code>b</code> = branching factor, <code>d</code> = depth of the shallowest goal, <code>m</code> = maximum depth of the tree, <code>C*</code> = cost of the optimal solution, <code>ε</code> = smallest step cost.</p>
+    </section>
+
+    <!-- 2 -->
+    <section id="uninformed">
+      <h2><span class="num">02</span>Uninformed (blind) search</h2>
+      <p>Uninformed strategies know only the problem definition.
+      They can generate successors and test for the goal, but have no idea which non-goal state is "closer" to the goal.</p>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 480 270" width="480" role="img" aria-label="Example tree: A has children B and C; B has D and E; C has F and G; E has H. Goal is G.">
+            <path d="M240,32 L130,98 M240,32 L350,98 M130,98 L70,168 M130,98 L190,168 M350,98 L290,168 M350,98 L410,168 M190,168 L190,238" class="ln"/>
+            <circle cx="240" cy="30" r="17" class="node"/><text x="240" y="35" text-anchor="middle" class="t-b">A</text>
+            <circle cx="130" cy="100" r="17" class="node"/><text x="130" y="105" text-anchor="middle" class="t-b">B</text>
+            <circle cx="350" cy="100" r="17" class="node"/><text x="350" y="105" text-anchor="middle" class="t-b">C</text>
+            <circle cx="70" cy="170" r="17" class="node"/><text x="70" y="175" text-anchor="middle" class="t-b">D</text>
+            <circle cx="190" cy="170" r="17" class="node"/><text x="190" y="175" text-anchor="middle" class="t-b">E</text>
+            <circle cx="290" cy="170" r="17" class="node"/><text x="290" y="175" text-anchor="middle" class="t-b">F</text>
+            <circle cx="410" cy="170" r="17" class="node-acc"/><text x="410" y="175" text-anchor="middle" class="t-inv">G</text>
+            <circle cx="190" cy="240" r="17" class="node"/><text x="190" y="245" text-anchor="middle" class="t-b">H</text>
+            <text x="440" y="175" class="t-acc">goal</text>
+            <text x="20" y="35" class="t-m">depth 0</text>
+            <text x="20" y="105" class="t-m">depth 1</text>
+            <text x="20" y="215" class="t-m">depth 2</text>
+            <text x="20" y="262" class="t-m">depth 3</text>
+          </svg>
+        </div>
+        <figcaption>Example tree used in the traces below. Children are generated left to right. Goal = G.</figcaption>
+      </figure>
+
+      <h3>Breadth-First Search (BFS)</h3>
+      <ul>
+        <li>Expands the <strong>shallowest</strong> unexpanded node first, level by level.</li>
+        <li>Frontier is a <strong>FIFO queue</strong>.</li>
+        <li>Goal test can be done when a node is <strong>generated</strong>, which saves one level of work.</li>
+        <li>Complete if b is finite. Optimal when all step costs are equal.</li>
+        <li>Time and space <code>O(b<sup>d</sup>)</code>. <span class="hl">Memory is the big problem</span>: at b = 10, d = 12, BFS needs about 10 terabytes.</li>
+      </ul>
+      <div class="tbl">
+        <table>
+          <thead><tr><th class="num">Step</th><th>Expand</th><th>Frontier (queue) after</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>A</td><td>B, C</td></tr>
+            <tr><td class="num">2</td><td>B</td><td>C, D, E</td></tr>
+            <tr><td class="num">3</td><td>C</td><td>D, E, F, <strong>G</strong> ← goal generated</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Order of visiting: <code>A → B → C → D → E → F → G</code>. Path found: <strong>A → C → G</strong>.</p>
+
+      <h3>Uniform-Cost Search (UCS)</h3>
+      <ul>
+        <li>Expands the node with the <strong>lowest path cost g(n)</strong>. Frontier is a priority queue ordered by g.</li>
+        <li>Goal test is done when a node is <strong>expanded</strong>, not when generated, otherwise a costlier path may be returned.</li>
+        <li>Complete and optimal if every step cost ≥ ε &gt; 0. Time and space <code>O(b<sup>1+⌊C*/ε⌋</sup>)</code>.</li>
+        <li>BFS is UCS with all step costs equal. UCS is Dijkstra's algorithm stopped at the goal.</li>
+      </ul>
+      <p><strong>Example (Sibiu → Bucharest):</strong> Sibiu generates Rimnicu Vilcea (80) and Fagaras (99).
+      Expand RV (80) → Pitesti (177).
+      Expand Fagaras (99) → Bucharest (310).
+      Expand Pitesti (177) → Bucharest (278), which replaces 310 in the frontier.
+      Expand Bucharest (278): goal. UCS returns Sibiu → RV → Pitesti → Bucharest = <strong>278</strong>, not the 310 path it generated first.</p>
+
+      <h3>Depth-First Search (DFS)</h3>
+      <ul>
+        <li>Expands the <strong>deepest</strong> unexpanded node first. Frontier is a <strong>LIFO stack</strong> (or recursion).</li>
+        <li><strong>Not complete</strong> in infinite spaces or with loops (tree-search version). Not optimal.</li>
+        <li>Time <code>O(b<sup>m</sup>)</code>, which is terrible if m ≫ d.</li>
+        <li>Space only <code>O(bm)</code>. <span class="hl">This linear memory is its main advantage.</span></li>
+      </ul>
+      <p>Order of visiting: <code>A → B → D → E → H → C → F → G</code>. Path found: A → C → G, but only after exploring the whole left subtree.</p>
+
+      <h3>Depth-Limited Search (DLS)</h3>
+      <ul>
+        <li>DFS with a depth limit <code>ℓ</code>: nodes at depth ℓ are treated as having no children.</li>
+        <li>Solves DFS's infinite-path problem.</li>
+        <li>Incomplete if ℓ &lt; d, non-optimal if ℓ &gt; d. Time <code>O(b<sup>ℓ</sup>)</code>, space <code>O(bℓ)</code>.</li>
+        <li>Can fail in two ways: <em>failure</em> (no solution) or <em>cutoff</em> (no solution within the limit).</li>
+        <li>The limit can come from knowledge of the problem, e.g. Romania has 20 cities so any solution has depth ≤ 19. The <strong>diameter</strong> (any city reachable from any other in 9 steps) gives a better limit.</li>
+      </ul>
+
+      <h3>Iterative Deepening DFS (IDDFS / IDS)</h3>
+      <ul>
+        <li>Runs DLS with limits 0, 1, 2, 3, … until a goal is found.</li>
+        <li><span class="hl">Combines the benefits of BFS and DFS</span>: complete and optimal (unit costs) like BFS, with <code>O(bd)</code> memory like DFS.</li>
+        <li>Time <code>O(b<sup>d</sup>)</code>. The repeated work looks wasteful, but most nodes are at the bottom level, so it adds little.</li>
+        <li><strong>Preferred uninformed method</strong> when the search space is large and the depth of the solution is unknown.</li>
+      </ul>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Limit</th><th>Nodes visited (on the example tree)</th></tr></thead>
+          <tbody>
+            <tr><td class="num">ℓ = 0</td><td>A</td></tr>
+            <tr><td class="num">ℓ = 1</td><td>A, B, C</td></tr>
+            <tr class="win"><td class="num">ℓ = 2</td><td>A, B, D, E, C, F, <strong>G</strong> ← goal found</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="key">
+        <span class="lbl">Why the repeated work is cheap</span>
+        <p class="formula">N(IDS) = d·b + (d−1)·b² + … + 1·b<sup>d</sup></p>
+        <p>For b = 10, d = 5: N(IDS) = 50 + 400 + 3,000 + 20,000 + 100,000 = <strong>123,450</strong>, while N(BFS) = 10 + 100 + 1,000 + 10,000 + 100,000 = <strong>111,110</strong>. Only about 11% extra.</p>
+      </div>
+
+      <h3>Bidirectional search</h3>
+      <ul>
+        <li>Runs two searches, one forward from the start and one backward from the goal, and stops when they meet.</li>
+        <li>Time and space <code>O(b<sup>d/2</sup>)</code>. For b = 10, d = 6: 2 × 10³ = 2,000 nodes instead of 10⁶.</li>
+        <li>Needs actions that can be reversed and a single, explicit goal state (hard for "checkmate" style goals).</li>
+      </ul>
+    </section>
+
+    <!-- 3 -->
+    <section id="compare-uninformed">
+      <h2><span class="num">03</span>Comparison of search strategies</h2>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Criterion</th><th>BFS</th><th>UCS</th><th>DFS</th><th>DLS</th><th>IDDFS</th><th>Bidirectional</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Complete?</strong></td><td class="y">Yes¹</td><td class="y">Yes¹ ²</td><td class="n">No</td><td class="n">No</td><td class="y">Yes¹</td><td class="y">Yes¹ ⁴</td></tr>
+            <tr><td><strong>Optimal?</strong></td><td class="y">Yes³</td><td class="y">Yes</td><td class="n">No</td><td class="n">No</td><td class="y">Yes³</td><td class="y">Yes³ ⁴</td></tr>
+            <tr><td><strong>Time</strong></td><td class="num">O(b<sup>d</sup>)</td><td class="num">O(b<sup>1+⌊C*/ε⌋</sup>)</td><td class="num">O(b<sup>m</sup>)</td><td class="num">O(b<sup>ℓ</sup>)</td><td class="num">O(b<sup>d</sup>)</td><td class="num">O(b<sup>d/2</sup>)</td></tr>
+            <tr><td><strong>Space</strong></td><td class="num">O(b<sup>d</sup>)</td><td class="num">O(b<sup>1+⌊C*/ε⌋</sup>)</td><td class="num">O(bm)</td><td class="num">O(bℓ)</td><td class="num">O(bd)</td><td class="num">O(b<sup>d/2</sup>)</td></tr>
+            <tr><td><strong>Frontier</strong></td><td>FIFO queue</td><td>Priority queue (g)</td><td>Stack</td><td>Stack</td><td>Stack</td><td>Two queues</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">¹ if b is finite. ² if step costs ≥ ε &gt; 0. ³ if all step costs are equal. ⁴ if both directions use BFS.</p>
+      <div class="tip">
+        <b class="lbl">Choosing quickly</b>
+        <ul>
+          <li>Unit costs, small space, want shortest path → <strong>BFS</strong>.</li>
+          <li>Different step costs, want cheapest path → <strong>UCS</strong>.</li>
+          <li>Very little memory, deep solutions, any solution is fine → <strong>DFS</strong>.</li>
+          <li>Large space, unknown depth, limited memory → <strong>IDDFS</strong>.</li>
+          <li>Single known goal with reversible actions → <strong>Bidirectional</strong>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="informed">
+      <h2><span class="num">04</span>Informed (heuristic) search</h2>
+      <p>Informed search uses problem-specific knowledge in the form of a <strong>heuristic function h(n)</strong>: the estimated cost of the cheapest path from node n to a goal.
+      h(goal) = 0.
+      Nodes are chosen using an <strong>evaluation function f(n)</strong>; the algorithm is called <strong>best-first search</strong>.</p>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="-60 0 640 390" width="640" role="img" aria-label="Part of the Romania road map with distances and straight-line distance heuristics to Bucharest">
+            <g class="ln-soft">
+              <path d="M40,150 L70,85"/><path d="M70,85 L110,30"/><path d="M110,30 L200,150"/>
+              <path d="M40,150 L50,255"/><path d="M200,150 L330,150"/>
+              <path d="M330,150 L480,320"/><path d="M230,230 L260,340"/><path d="M360,280 L260,340"/>
+            </g>
+            <g class="ln-acc">
+              <path d="M40,150 L200,150"/><path d="M200,150 L230,230"/><path d="M230,230 L360,280"/><path d="M360,280 L480,320"/>
+            </g>
+            <g>
+              <circle cx="110" cy="30" r="6" class="node"/><circle cx="70" cy="85" r="6" class="node"/>
+              <circle cx="40" cy="150" r="7" class="node-acc"/><circle cx="50" cy="255" r="6" class="node"/>
+              <circle cx="200" cy="150" r="7" class="node-acc"/><circle cx="330" cy="150" r="6" class="node"/>
+              <circle cx="230" cy="230" r="7" class="node-acc"/><circle cx="360" cy="280" r="7" class="node-acc"/>
+              <circle cx="260" cy="340" r="6" class="node"/><circle cx="480" cy="320" r="8" class="node-acc"/>
+            </g>
+            <text x="122" y="30" class="t">Oradea <tspan class="t-m">h=380</tspan></text>
+            <text x="82" y="89" class="t">Zerind <tspan class="t-m">h=374</tspan></text>
+            <text x="30" y="140" text-anchor="end" class="t-b">Arad <tspan class="t-m">h=366</tspan></text>
+            <text x="62" y="266" class="t">Timisoara <tspan class="t-m">h=329</tspan></text>
+            <text x="190" y="136" class="t-b">Sibiu <tspan class="t-m">h=253</tspan></text>
+            <text x="316" y="136" class="t">Fagaras <tspan class="t-m">h=176</tspan></text>
+            <text x="220" y="238" text-anchor="end" class="t-b">Rimnicu V. <tspan class="t-m">h=193</tspan></text>
+            <text x="372" y="276" class="t-b">Pitesti <tspan class="t-m">h=100</tspan></text>
+            <text x="180" y="362" class="t">Craiova <tspan class="t-m">h=160</tspan></text>
+            <text x="440" y="350" class="t-b">Bucharest <tspan class="t-m">h=0</tspan></text>
+            <text x="48" y="120" text-anchor="end" class="t-m">75</text>
+            <text x="82" y="55" text-anchor="end" class="t-m">71</text>
+            <text x="180" y="110" class="t-m">151</text>
+            <text x="120" y="143" text-anchor="middle" class="t-acc">140</text>
+            <text x="38" y="208" text-anchor="end" class="t-m">118</text>
+            <text x="265" y="166" text-anchor="middle" class="t-m">99</text>
+            <text x="226" y="192" class="t-acc">80</text>
+            <text x="416" y="228" class="t-m">211</text>
+            <text x="292" y="246" class="t-acc">97</text>
+            <text x="236" y="296" text-anchor="end" class="t-m">146</text>
+            <text x="318" y="322" class="t-m">138</text>
+            <text x="420" y="292" text-anchor="middle" class="t-acc">101</text>
+          </svg>
+        </div>
+        <figcaption>Part of the Romania map. Numbers on roads are distances in km; h = straight-line distance to Bucharest (h<sub>SLD</sub>). Highlighted: the optimal route found by A* (418 km).</figcaption>
+      </figure>
+
+      <h3>Greedy best-first search</h3>
+      <ul>
+        <li>Expands the node that <strong>appears closest to the goal</strong>: <code>f(n) = h(n)</code>.</li>
+        <li>Fast when the heuristic is good, but <strong>not optimal</strong> and <strong>not complete</strong> (tree-search version can loop, e.g. Iasi → Neamt → Iasi …).</li>
+        <li>Worst case time and space <code>O(b<sup>m</sup>)</code>.</li>
+      </ul>
+      <div class="tbl">
+        <table>
+          <thead><tr><th class="num">Step</th><th>Expand</th><th>Children with h</th><th>Next pick (lowest h)</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>Arad (366)</td><td>Sibiu 253, Timisoara 329, Zerind 374</td><td>Sibiu</td></tr>
+            <tr><td class="num">2</td><td>Sibiu (253)</td><td>Fagaras 176, Rimnicu V. 193, Oradea 380, Arad 366</td><td>Fagaras</td></tr>
+            <tr><td class="num">3</td><td>Fagaras (176)</td><td>Bucharest 0, Sibiu 253</td><td>Bucharest</td></tr>
+            <tr class="win"><td class="num">4</td><td>Bucharest</td><td colspan="2">Goal. Path Arad → Sibiu → Fagaras → Bucharest = 140 + 99 + 211 = <strong>450 km</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Greedy found a path quickly but it is <strong>32 km longer</strong> than the optimal 418 km route through Rimnicu Vilcea and Pitesti.</p>
+    </section>
+
+    <!-- 5 -->
+    <section id="astar">
+      <h2><span class="num">05</span>A* search</h2>
+      <div class="key">
+        <span class="lbl">Evaluation function</span>
+        <p class="formula">f(n) = g(n) + h(n)</p>
+        <p><code>g(n)</code> = actual cost from start to n; <code>h(n)</code> = estimated cost from n to goal; so <code>f(n)</code> = estimated cost of the cheapest solution through n.</p>
+      </div>
+      <h3>A* trace: Arad → Bucharest</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th class="num">Step</th><th>Expand (f)</th><th>New nodes: g + h = f</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>Arad (366)</td><td>Sibiu 140+253 = <strong>393</strong>; Timisoara 118+329 = 447; Zerind 75+374 = 449</td></tr>
+            <tr><td class="num">2</td><td>Sibiu (393)</td><td>Rimnicu V. 220+193 = <strong>413</strong>; Fagaras 239+176 = 415; Arad 280+366 = 646; Oradea 291+380 = 671</td></tr>
+            <tr><td class="num">3</td><td>Rimnicu V. (413)</td><td>Pitesti 317+100 = 417; Craiova 366+160 = 526; Sibiu 300+253 = 553</td></tr>
+            <tr><td class="num">4</td><td>Fagaras (415)</td><td>Bucharest 450+0 = 450; Sibiu 338+253 = 591</td></tr>
+            <tr><td class="num">5</td><td>Pitesti (417)</td><td>Bucharest 418+0 = <strong>418</strong>; Craiova 455+160 = 615; Rimnicu V. 414+193 = 607</td></tr>
+            <tr class="win"><td class="num">6</td><td>Bucharest (418)</td><td>Goal. Arad → Sibiu → Rimnicu V. → Pitesti → Bucharest = <strong>418 km (optimal)</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <b class="lbl">Key point to write</b>
+        <p>At step 4 Bucharest was already in the frontier with f = 450, but A* did not stop, because the goal test is applied on <strong>expansion</strong>.
+        Pitesti (417) was cheaper, and it led to a better Bucharest (418).
+        This is why A* is optimal while greedy is not.</p>
+      </div>
+
+      <h3>Conditions for optimality</h3>
+      <div class="split">
+        <div>
+          <h5>Admissible heuristic</h5>
+          <p><code>h(n) ≤ h*(n)</code> for every n, where h* is the true cost to the goal.
+          It never <strong>overestimates</strong>.
+          Straight-line distance is admissible because the straight line is the shortest possible path.
+          <strong>A* tree search is optimal if h is admissible.</strong></p>
+        </div>
+        <div>
+          <h5>Consistent (monotonic) heuristic</h5>
+          <p><code>h(n) ≤ c(n, a, n′) + h(n′)</code> for every successor n′ (triangle inequality).
+          Then f never decreases along a path.
+          <strong>A* graph search is optimal if h is consistent.</strong>
+          Every consistent heuristic is admissible.</p>
+        </div>
+      </div>
+      <h3>Properties of A*</h3>
+      <ul>
+        <li><strong>Complete</strong> if b is finite and step costs ≥ ε &gt; 0.</li>
+        <li><strong>Optimal</strong> under the conditions above.</li>
+        <li><strong>Optimally efficient</strong>: no other optimal algorithm using the same heuristic is guaranteed to expand fewer nodes.</li>
+        <li>Expands all nodes with <code>f(n) &lt; C*</code>, some with <code>f(n) = C*</code>, none with <code>f(n) &gt; C*</code>, so parts of the tree are <strong>pruned</strong>.</li>
+        <li>Main drawback: <strong>memory</strong>. It keeps every generated node, so it usually runs out of space before time.</li>
+      </ul>
+      <h3>Memory-bounded variants</h3>
+      <ul>
+        <li><strong>IDA* (Iterative Deepening A*)</strong>: iterative deepening where the cutoff is the f-cost instead of depth. Each round uses the smallest f that exceeded the previous cutoff.</li>
+        <li><strong>RBFS (Recursive Best-First Search)</strong>: linear space, remembers the best alternative f-value.</li>
+        <li><strong>SMA* (Simplified Memory-bounded A*)</strong>: runs A* until memory is full, then drops the worst leaf and backs up its value to the parent.</li>
+      </ul>
+
+      <h3>Uninformed vs informed at a glance</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Algorithm</th><th>f(n)</th><th>Complete</th><th>Optimal</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>UCS</td><td>g(n)</td><td class="y">Yes</td><td class="y">Yes</td><td>Ignores the goal direction</td></tr>
+            <tr><td>Greedy best-first</td><td>h(n)</td><td class="n">No</td><td class="n">No</td><td>Fast, can be misled</td></tr>
+            <tr><td>A*</td><td>g(n) + h(n)</td><td class="y">Yes</td><td class="y">Yes (admissible / consistent)</td><td>Memory hungry</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section id="heuristics">
+      <h2><span class="num">06</span>Heuristic functions</h2>
+      <h3>Two heuristics for the 8-puzzle</h3>
+      <div class="split">
+        <div>
+          <h5>Start</h5>
+<pre style="margin:0;text-align:center;font-size:18px"><code>7 2 4
+5 _ 6
+8 3 1</code></pre>
+        </div>
+        <div>
+          <h5>Goal</h5>
+<pre style="margin:0;text-align:center;font-size:18px"><code>_ 1 2
+3 4 5
+6 7 8</code></pre>
+        </div>
+      </div>
+      <ul>
+        <li><strong>h₁ = number of misplaced tiles</strong> (blank not counted). Here all 8 tiles are misplaced, so <strong>h₁ = 8</strong>.</li>
+        <li><strong>h₂ = sum of Manhattan distances</strong> of each tile from its goal position.</li>
+      </ul>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Tile</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th>Total</th></tr></thead>
+          <tbody><tr><td>Manhattan distance</td><td class="num">3</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">3</td><td class="num">3</td><td class="num">2</td><td class="num"><strong>h₂ = 18</strong></td></tr></tbody>
+        </table>
+      </div>
+      <p>Both are admissible; the true solution cost is 26.</p>
+
+      <h3>Dominance</h3>
+      <p>If <code>h₂(n) ≥ h₁(n)</code> for all n (and both are admissible), then h₂ <strong>dominates</strong> h₁ and A* with h₂ never expands more nodes.
+      <span class="hl">Always prefer the larger admissible heuristic</span>, as long as it is cheap to compute.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Solution depth</th><th>IDS nodes</th><th>A*(h₁) nodes</th><th>A*(h₂) nodes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">d = 12</td><td class="num">3,644,035</td><td class="num">227</td><td class="num">73</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Effective branching factor b*</h3>
+      <p>If A* generates N nodes for a solution at depth d, then b* is the branching factor a uniform tree of depth d would need to contain N + 1 nodes: <code>N + 1 = 1 + b* + (b*)² + … + (b*)<sup>d</sup></code>.
+      A good heuristic gives b* close to 1.</p>
+
+      <h3>Inventing heuristics</h3>
+      <ul>
+        <li><strong>Relaxed problems</strong>: remove constraints from the actions. The exact cost of a relaxed problem is an admissible heuristic for the original.
+          <ul>
+            <li>"A tile can move anywhere" → h₁.</li>
+            <li>"A tile can move to any adjacent square, even if occupied" → h₂.</li>
+          </ul>
+        </li>
+        <li><strong>Pattern databases</strong>: store exact costs of solving sub-problems (e.g. tiles 1-4).</li>
+        <li><strong>Learning</strong> from experience (features such as number of misplaced tiles and pairs of adjacent tiles).</li>
+        <li><strong>Combining</strong>: <code>h(n) = max(h₁, h₂, …, h<sub>k</sub>)</code> is admissible if each is, and dominates all of them.</li>
+      </ul>
+    </section>
+
+    <!-- 7 -->
+    <section id="local">
+      <h2><span class="num">07</span>Local search &amp; optimisation: hill climbing</h2>
+      <p>In many problems the <strong>path does not matter, only the final state</strong> (8-queens, timetabling, VLSI layout, TSP tour).
+      Local search keeps only the <strong>current state</strong> and moves to neighbours.
+      It uses very little memory and works in huge or continuous spaces.
+      The goal is to find the <strong>global maximum</strong> of an objective function (or global minimum of a cost).</p>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 620 250" width="620" role="img" aria-label="State-space landscape showing a local maximum, a shoulder and the global maximum">
+            <path d="M40,210 L600,210" class="ln-soft"/>
+            <path d="M40,210 L40,20" class="ln-soft"/>
+            <path d="M40,200 C90,200 110,95 160,95 C210,95 220,165 260,165 C300,165 310,125 340,125 L410,125 C440,125 460,45 500,45 C540,45 570,180 600,195 L600,210 L40,210 Z" class="area"/>
+            <path d="M40,200 C90,200 110,95 160,95 C210,95 220,165 260,165 C300,165 310,125 340,125 L410,125 C440,125 460,45 500,45 C540,45 570,180 600,195" class="ln-acc"/>
+            <circle cx="160" cy="95" r="5" class="node"/>
+            <text x="160" y="82" text-anchor="middle" class="t-b">local maximum</text>
+            <circle cx="500" cy="45" r="6" class="node-acc"/>
+            <text x="500" y="32" text-anchor="middle" class="t-b">global maximum</text>
+            <text x="375" y="115" text-anchor="middle" class="t-b">shoulder</text>
+            <text x="260" y="186" text-anchor="middle" class="t-m">valley</text>
+            <circle cx="118" cy="128" r="6" class="node-cut" style="stroke-dasharray:none"/>
+            <text x="106" y="150" text-anchor="end" class="t-bad">current state</text>
+            <text x="320" y="232" text-anchor="middle" class="t-m">state space →</text>
+            <text x="28" y="115" text-anchor="middle" class="t-m" transform="rotate(-90 28 115)">objective function</text>
+          </svg>
+        </div>
+        <figcaption>State-space landscape. Hill climbing from the red state goes uphill to the local maximum and stops there, never reaching the global maximum.</figcaption>
+      </figure>
+
+      <h3>Hill climbing (steepest ascent)</h3>
+      <p>Repeatedly move to the neighbour with the highest value; stop when no neighbour is better.
+      It is "greedy local search", like climbing Everest in thick fog with amnesia.</p>
+<pre><code><span class="kw">function</span> HILL-CLIMBING(problem):
+    current ← problem.INITIAL-STATE
+    <span class="kw">loop</span>:
+        neighbour ← highest-valued successor of current
+        <span class="kw">if</span> neighbour.VALUE ≤ current.VALUE: <span class="kw">return</span> current
+        current ← neighbour</code></pre>
+
+      <h3>Problems with hill climbing</h3>
+      <div class="cards">
+        <div class="card"><h5>Local maxima</h5><p>A peak higher than its neighbours but lower than the global maximum. The algorithm gets stuck.</p></div>
+        <div class="card"><h5>Plateau</h5><p>A flat area: either a flat local maximum or a <strong>shoulder</strong> from which progress is possible. The search wanders randomly.</p></div>
+        <div class="card"><h5>Ridges</h5><p>A sequence of local maxima that is hard to climb because no single move goes uphill along the ridge.</p></div>
+      </div>
+      <p>On 8-queens, steepest-ascent hill climbing gets stuck <strong>86%</strong> of the time and solves only <strong>14%</strong> of random instances, but it is fast: about 4 steps when it succeeds and 3 when it gets stuck.
+      Allowing up to 100 <strong>sideways moves</strong> raises success to <strong>94%</strong>.</p>
+
+      <h3>Variants</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Variant</th><th>Idea</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Stochastic hill climbing</strong></td><td>Pick randomly among uphill moves, weighted by steepness</td></tr>
+            <tr><td><strong>First-choice hill climbing</strong></td><td>Generate successors randomly and take the first one that is better. Good when there are thousands of successors.</td></tr>
+            <tr><td><strong>Random-restart hill climbing</strong></td><td>"If at first you don't succeed, try again." Run from random start states until a goal is found. Complete with probability 1. If each run succeeds with probability p, expected restarts = 1/p (≈ 7 for 8-queens).</td></tr>
+            <tr><td><strong>Sideways moves</strong></td><td>Allow moves to equal-valued neighbours to escape shoulders (with a limit to avoid infinite loops on flat maxima)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Other optimisation methods</h3>
+      <ul>
+        <li><strong>Local beam search</strong>: keep k states instead of one. At each step generate all successors of all k states and keep the best k. Information is shared between the k searches, unlike k independent restarts. <strong>Stochastic beam search</strong> picks the k successors randomly, weighted by value, to keep diversity.</li>
+        <li><strong>Genetic algorithms</strong>: a population of k states (strings). Each generation: evaluate <strong>fitness</strong> → <strong>selection</strong> (fitter states more likely to reproduce) → <strong>crossover</strong> (combine two parents at a random point) → <strong>mutation</strong> (random small change). For 8-queens, a state is a string like <code>24748552</code> (row of the queen in each column) and fitness is the number of non-attacking pairs (max 28).</li>
+      </ul>
+    </section>
+
+    <!-- 8 -->
+    <section id="annealing">
+      <h2><span class="num">08</span>Simulated annealing</h2>
+      <p>Hill climbing never goes downhill, so it is incomplete.
+      A random walk is complete but very inefficient.
+      <strong>Simulated annealing</strong> combines the two, inspired by <strong>annealing in metallurgy</strong>: metal is heated and then cooled slowly so it settles into a low-energy crystal state.</p>
+<pre><code><span class="kw">function</span> SIMULATED-ANNEALING(problem, schedule):
+    current ← problem.INITIAL-STATE
+    <span class="kw">for</span> t = 1 to ∞:
+        T ← schedule(t)
+        <span class="kw">if</span> T = 0: <span class="kw">return</span> current
+        next ← a randomly selected successor of current
+        ΔE ← next.VALUE − current.VALUE
+        <span class="kw">if</span> ΔE &gt; 0: current ← next                          <span class="cm">// good move: always accept</span>
+        <span class="kw">else</span>: current ← next <span class="kw">only with probability</span> e<sup>ΔE/T</sup>   <span class="cm">// bad move: sometimes accept</span></code></pre>
+      <div class="key">
+        <span class="lbl">Acceptance probability for a bad move</span>
+        <p class="formula">P = e<sup>ΔE / T</sup>   (ΔE &lt; 0)</p>
+        <ul>
+          <li>The worse the move (more negative ΔE), the lower the probability.</li>
+          <li>The higher the temperature T, the more likely bad moves are accepted.</li>
+          <li>T starts high (exploration) and decreases over time (exploitation).</li>
+          <li>If T decreases slowly enough, the algorithm finds the global optimum with probability approaching 1.</li>
+        </ul>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Worked example: ΔE = −5</th><th>Probability of accepting</th></tr></thead>
+          <tbody>
+            <tr><td>T = 100</td><td class="num">e<sup>−0.05</sup> ≈ 0.95</td></tr>
+            <tr><td>T = 10</td><td class="num">e<sup>−0.5</sup> ≈ 0.61</td></tr>
+            <tr><td>T = 1</td><td class="num">e<sup>−5</sup> ≈ 0.0067</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Used in VLSI layout, factory scheduling, TSP and other large optimisation problems.</p>
+      <div class="split">
+        <div><h5>Hill climbing</h5><p>Only uphill moves, deterministic, gets stuck at local maxima, fast.</p></div>
+        <div><h5>Simulated annealing</h5><p>Accepts downhill moves with a probability that drops over time, escapes local maxima, slower but finds better solutions.</p></div>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section id="csp">
+      <h2><span class="num">09</span>Constraint Satisfaction Problems (CSP)</h2>
+      <p>A CSP uses a <strong>factored</strong> representation: a state is a set of variables with values, and a solution is an assignment that satisfies every constraint.</p>
+      <div class="key">
+        <span class="lbl">Definition: three components</span>
+        <ul>
+          <li><strong>X</strong> = set of variables {X₁, …, Xₙ}.</li>
+          <li><strong>D</strong> = set of domains {D₁, …, Dₙ}, one per variable.</li>
+          <li><strong>C</strong> = set of constraints that specify allowed combinations of values.</li>
+        </ul>
+        <p>An assignment is <strong>consistent</strong> if it violates no constraint and <strong>complete</strong> if every variable has a value. A <strong>solution</strong> is consistent and complete.</p>
+      </div>
+
+      <h3>Example: map colouring of Australia</h3>
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 460 320" width="460" role="img" aria-label="Constraint graph of Australia with a valid three-colouring">
+            <g class="ln">
+              <path d="M80,110 L200,60"/><path d="M80,110 L210,160"/><path d="M200,60 L210,160"/>
+              <path d="M200,60 L330,70"/><path d="M210,160 L330,70"/><path d="M210,160 L350,170"/>
+              <path d="M210,160 L290,240"/><path d="M330,70 L350,170"/><path d="M350,170 L290,240"/>
+            </g>
+            <circle cx="80" cy="110" r="24" fill="var(--c-red)"/><text x="80" y="115" text-anchor="middle" class="t-b" style="fill:#fff">WA</text>
+            <circle cx="200" cy="60" r="24" fill="var(--c-green)"/><text x="200" y="65" text-anchor="middle" class="t-b" style="fill:#fff">NT</text>
+            <circle cx="210" cy="160" r="24" fill="var(--c-blue)"/><text x="210" y="165" text-anchor="middle" class="t-b" style="fill:#fff">SA</text>
+            <circle cx="330" cy="70" r="24" fill="var(--c-red)"/><text x="330" y="75" text-anchor="middle" class="t-b" style="fill:#fff">Q</text>
+            <circle cx="350" cy="170" r="24" fill="var(--c-green)"/><text x="350" y="175" text-anchor="middle" class="t-b" style="fill:#fff">NSW</text>
+            <circle cx="290" cy="240" r="24" fill="var(--c-red)"/><text x="290" y="245" text-anchor="middle" class="t-b" style="fill:#fff">V</text>
+            <circle cx="310" cy="296" r="18" fill="var(--c-red)"/><text x="310" y="301" text-anchor="middle" class="t-b" style="fill:#fff">T</text>
+            <text x="340" y="300" class="t-m">Tasmania: no neighbours</text>
+          </svg>
+        </div>
+        <figcaption>Constraint graph: nodes are variables, edges are "must differ" constraints. SA is the most constrained (degree 5).</figcaption>
+      </figure>
+      <ul>
+        <li><strong>Variables</strong>: WA, NT, Q, NSW, V, SA, T.</li>
+        <li><strong>Domains</strong>: {red, green, blue} for each.</li>
+        <li><strong>Constraints</strong>: adjacent regions differ: WA≠NT, WA≠SA, NT≠SA, NT≠Q, SA≠Q, SA≠NSW, SA≠V, Q≠NSW, NSW≠V.</li>
+        <li><strong>One solution</strong>: WA=red, NT=green, SA=blue, Q=red, NSW=green, V=red, T=red (T can be anything).</li>
+      </ul>
+
+      <h3>Types of constraints</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Type</th><th>Meaning</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Unary</td><td>One variable</td><td>SA ≠ green</td></tr>
+            <tr><td>Binary</td><td>Two variables</td><td>SA ≠ NSW</td></tr>
+            <tr><td>Global / higher-order</td><td>Three or more variables</td><td>Alldiff(F, T, U, W, R, O) in cryptarithmetic</td></tr>
+            <tr><td>Preference (soft)</td><td>Should, not must; has a cost</td><td>Prof. X prefers morning lectures</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: cryptarithmetic</h3>
+      <div class="split">
+        <div>
+<pre style="margin:0;font-size:17px"><code>    T W O
+  + T W O
+  -------
+  F O U R</code></pre>
+        </div>
+        <div>
+          <p><strong>Variables</strong>: F, T, U, W, R, O and carries C₁, C₂, C₃.<br>
+          <strong>Domains</strong>: digits 0-9, carries 0/1.<br>
+          <strong>Constraints</strong>:</p>
+        </div>
+      </div>
+      <ul>
+        <li><code>Alldiff(F, T, U, W, R, O)</code></li>
+        <li><code>O + O = R + 10·C₁</code></li>
+        <li><code>C₁ + W + W = U + 10·C₂</code></li>
+        <li><code>C₂ + T + T = O + 10·C₃</code></li>
+        <li><code>C₃ = F</code>, and F ≠ 0, T ≠ 0 (no leading zeros)</li>
+      </ul>
+      <p>One solution: <strong>734 + 734 = 1468</strong> (T=7, W=3, O=4, F=1, U=6, R=8).</p>
+      <p>The famous <strong>SEND + MORE = MONEY</strong> gives <strong>9567 + 1085 = 10652</strong>.
+      Reasoning: the sum of two 4-digit numbers is below 20,000, so <strong>M = 1</strong>; then S + 1 (+ carry) ≥ 10 forces S = 9 and <strong>O = 0</strong>; the remaining columns give E = 5, N = 6, D = 7, R = 8, Y = 2.</p>
+
+      <h3>Backtracking search</h3>
+      <p>DFS that assigns <strong>one variable at a time</strong> and <strong>backtracks</strong> as soon as a variable has no legal value left.</p>
+<pre><code><span class="kw">function</span> BACKTRACK(assignment, csp):
+    <span class="kw">if</span> assignment is complete: <span class="kw">return</span> assignment
+    var ← SELECT-UNASSIGNED-VARIABLE(csp)            <span class="cm">// MRV, degree</span>
+    <span class="kw">for each</span> value <span class="kw">in</span> ORDER-DOMAIN-VALUES(var)       <span class="cm">// LCV</span>
+        <span class="kw">if</span> value is consistent with assignment:
+            add {var = value}
+            inferences ← INFERENCE(csp, var, value)  <span class="cm">// forward checking / AC-3</span>
+            <span class="kw">if</span> inferences ≠ failure:
+                result ← BACKTRACK(assignment, csp)
+                <span class="kw">if</span> result ≠ failure: <span class="kw">return</span> result
+        remove {var = value} and inferences
+    <span class="kw">return</span> failure</code></pre>
+
+      <h3>Heuristics that make backtracking fast</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Heuristic</th><th>Question it answers</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td><strong>MRV</strong> (Minimum Remaining Values), "fail-first"</td><td>Which variable next?</td><td>Pick the variable with the <strong>fewest legal values</strong> left</td></tr>
+            <tr><td><strong>Degree heuristic</strong></td><td>Tie-breaker for MRV</td><td>Pick the variable involved in the <strong>most constraints</strong> with unassigned variables (SA first in Australia, degree 5)</td></tr>
+            <tr><td><strong>LCV</strong> (Least Constraining Value)</td><td>Which value to try first?</td><td>Pick the value that <strong>rules out the fewest</strong> choices for neighbours</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">Memory trick: choose the variable that fails first (MRV) but the value that fails last (LCV).</p>
+
+      <h3>Inference: forward checking</h3>
+      <p>After assigning X, remove inconsistent values from the domains of X's unassigned neighbours.
+      If some domain becomes empty, backtrack immediately.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>After assigning</th><th>WA</th><th>NT</th><th>Q</th><th>NSW</th><th>V</th><th>SA</th></tr></thead>
+          <tbody>
+            <tr><td>Initial</td><td>RGB</td><td>RGB</td><td>RGB</td><td>RGB</td><td>RGB</td><td>RGB</td></tr>
+            <tr><td>WA = red</td><td><strong>R</strong></td><td>GB</td><td>RGB</td><td>RGB</td><td>RGB</td><td>GB</td></tr>
+            <tr><td>Q = green</td><td><strong>R</strong></td><td>B</td><td><strong>G</strong></td><td>RB</td><td>RGB</td><td>B</td></tr>
+            <tr><td>V = blue</td><td><strong>R</strong></td><td>B</td><td><strong>G</strong></td><td>R</td><td><strong>B</strong></td><td class="n">∅ → backtrack</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Forward checking misses one thing: after Q = green, NT and SA are both {B} and adjacent, which is already impossible. <strong>Arc consistency</strong> catches this earlier.</p>
+
+      <h3>Arc consistency (AC-3)</h3>
+      <ul>
+        <li>Arc X → Y is <strong>consistent</strong> if for <em>every</em> value of X there is <em>some</em> value of Y that satisfies the constraint.</li>
+        <li>AC-3 keeps a queue of arcs. For each arc (X, Y) it deletes unsupported values from X; if X's domain changed, all arcs (Z, X) are added back to the queue.</li>
+        <li>If any domain becomes empty, there is no solution.</li>
+        <li>Complexity <code>O(c·d³)</code> for c binary constraints and domain size d.</li>
+      </ul>
+
+      <h3>Local search for CSP: min-conflicts</h3>
+      <p>Start with a complete (possibly invalid) assignment.
+      Repeatedly pick a conflicted variable and give it the value that causes the <strong>fewest conflicts</strong>.
+      Solves the million-queens problem in about 50 steps on average.</p>
+    </section>
+
+    <!-- 10 -->
+    <section id="minimax">
+      <h2><span class="num">10</span>Game playing: minimax</h2>
+      <p>Games are <strong>adversarial search</strong> problems in competitive multi-agent environments.
+      Classical game AI studies <strong>deterministic, two-player, turn-taking, zero-sum games of perfect information</strong> (chess, tic-tac-toe).</p>
+      <h3>Formal definition of a game</h3>
+      <dl class="terms">
+        <dt>S₀</dt><dd>Initial state.</dd>
+        <dt>PLAYER(s)</dt><dd>Which player moves in state s (MAX or MIN).</dd>
+        <dt>ACTIONS(s)</dt><dd>Legal moves in s.</dd>
+        <dt>RESULT(s, a)</dt><dd>Transition model.</dd>
+        <dt>TERMINAL-TEST(s)</dt><dd>True when the game is over.</dd>
+        <dt>UTILITY(s, p)</dt><dd>Final numeric value for player p, e.g. +1 win, 0 draw, −1 loss.</dd>
+      </dl>
+
+      <div class="key">
+        <span class="lbl">Minimax value</span>
+        <p class="formula">MINIMAX(s) = UTILITY(s) if terminal<br>max<sub>a</sub> MINIMAX(RESULT(s,a)) if PLAYER = MAX<br>min<sub>a</sub> MINIMAX(RESULT(s,a)) if PLAYER = MIN</p>
+        <p>MAX picks the move with the highest value assuming MIN plays <strong>optimally</strong> and tries to minimise MAX's score.</p>
+      </div>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 600 250" width="600" role="img" aria-label="Minimax tree: MIN nodes B=3, C=2, D=2; root value 3">
+            <path d="M300,42 L110,96 M300,42 L300,96 M300,42 L490,96" class="ln"/>
+            <path d="M110,124 L50,179 M110,124 L110,179 M110,124 L170,179 M300,124 L240,179 M300,124 L300,179 M300,124 L360,179 M490,124 L430,179 M490,124 L490,179 M490,124 L550,179" class="ln"/>
+            <path d="M300,42 L110,96" class="ln-acc"/>
+            <polygon points="300,12 280,44 320,44" class="box-acc"/>
+            <text x="332" y="36" class="t-acc">MAX  A = 3</text>
+            <polygon points="92,96 128,96 110,126" class="box"/>
+            <polygon points="282,96 318,96 300,126" class="box"/>
+            <polygon points="472,96 508,96 490,126" class="box"/>
+            <text x="136" y="110" class="t-b">B = 3</text>
+            <text x="326" y="110" class="t-b">C = 2</text>
+            <text x="516" y="110" class="t-b">D = 2</text>
+            <text x="18" y="112" class="t-m">MIN</text>
+            <text x="190" y="66" text-anchor="middle" class="t-m">a1</text>
+            <text x="308" y="72" class="t-m">a2</text>
+            <text x="405" y="66" text-anchor="middle" class="t-m">a3</text>
+            <g>
+              <rect x="38" y="179" width="24" height="24" class="box"/><text x="50" y="196" text-anchor="middle" class="t-b">3</text>
+              <rect x="98" y="179" width="24" height="24" class="box"/><text x="110" y="196" text-anchor="middle" class="t-b">12</text>
+              <rect x="158" y="179" width="24" height="24" class="box"/><text x="170" y="196" text-anchor="middle" class="t-b">8</text>
+              <rect x="228" y="179" width="24" height="24" class="box"/><text x="240" y="196" text-anchor="middle" class="t-b">2</text>
+              <rect x="288" y="179" width="24" height="24" class="box"/><text x="300" y="196" text-anchor="middle" class="t-b">4</text>
+              <rect x="348" y="179" width="24" height="24" class="box"/><text x="360" y="196" text-anchor="middle" class="t-b">6</text>
+              <rect x="418" y="179" width="24" height="24" class="box"/><text x="430" y="196" text-anchor="middle" class="t-b">14</text>
+              <rect x="478" y="179" width="24" height="24" class="box"/><text x="490" y="196" text-anchor="middle" class="t-b">5</text>
+              <rect x="538" y="179" width="24" height="24" class="box"/><text x="550" y="196" text-anchor="middle" class="t-b">2</text>
+            </g>
+            <text x="300" y="236" text-anchor="middle" class="t-m">terminal utilities (for MAX)</text>
+          </svg>
+        </div>
+        <figcaption>Two-ply game tree. MIN takes the minimum of its children (3, 2, 2); MAX takes the maximum of those, so the best move for MAX is a1 with value 3.</figcaption>
+      </figure>
+<pre><code><span class="kw">function</span> MINIMAX-DECISION(state):
+    <span class="kw">return</span> argmax<sub>a ∈ ACTIONS(state)</sub> MIN-VALUE(RESULT(state, a))
+
+<span class="kw">function</span> MAX-VALUE(state):
+    <span class="kw">if</span> TERMINAL-TEST(state): <span class="kw">return</span> UTILITY(state)
+    v ← −∞
+    <span class="kw">for each</span> a <span class="kw">in</span> ACTIONS(state): v ← MAX(v, MIN-VALUE(RESULT(state, a)))
+    <span class="kw">return</span> v
+
+<span class="kw">function</span> MIN-VALUE(state):
+    <span class="kw">if</span> TERMINAL-TEST(state): <span class="kw">return</span> UTILITY(state)
+    v ← +∞
+    <span class="kw">for each</span> a <span class="kw">in</span> ACTIONS(state): v ← MIN(v, MAX-VALUE(RESULT(state, a)))
+    <span class="kw">return</span> v</code></pre>
+      <h3>Properties of minimax</h3>
+      <ul>
+        <li>Complete if the tree is finite; optimal against an optimal opponent.</li>
+        <li>Time <code>O(b<sup>m</sup>)</code>, space <code>O(bm)</code> (depth-first).</li>
+        <li>For chess b ≈ 35 and m ≈ 100, so exact minimax is impossible. Real programs cut off the search.</li>
+      </ul>
+      <h3>Imperfect real-time decisions</h3>
+      <ul>
+        <li>Replace TERMINAL-TEST with a <strong>CUTOFF-TEST</strong> (depth limit, usually with iterative deepening so a move is ready when time runs out).</li>
+        <li>Replace UTILITY with an <strong>evaluation function EVAL(s)</strong> that estimates the value of a position.
+          Typical form: weighted linear sum <code>EVAL(s) = w₁f₁(s) + w₂f₂(s) + … + wₙfₙ(s)</code>, e.g. chess material: pawn 1, knight/bishop 3, rook 5, queen 9.</li>
+        <li><strong>Quiescence search</strong>: keep searching "noisy" positions (pending captures) until they are quiet before applying EVAL.</li>
+        <li><strong>Horizon effect</strong>: the program pushes an unavoidable bad event beyond its search depth with delaying moves, so it doesn't see it.</li>
+      </ul>
+    </section>
+
+    <!-- 11 -->
+    <section id="alphabeta">
+      <h2><span class="num">11</span>Alpha-beta pruning</h2>
+      <p>Alpha-beta returns the <strong>same move as minimax</strong> but skips branches that cannot affect the final decision.</p>
+      <div class="split">
+        <div><h5>α (alpha)</h5><p>Best (highest) value found so far for <strong>MAX</strong> on the path. Starts at −∞. Updated at MAX nodes.</p></div>
+        <div><h5>β (beta)</h5><p>Best (lowest) value found so far for <strong>MIN</strong> on the path. Starts at +∞. Updated at MIN nodes.</p></div>
+      </div>
+      <div class="key">
+        <span class="lbl">Pruning rule</span>
+        <p class="formula">prune whenever α ≥ β</p>
+        <p>At a MIN node, stop when its value ≤ α (MAX already has something better elsewhere). At a MAX node, stop when its value ≥ β.</p>
+      </div>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 600 260" width="600" role="img" aria-label="Alpha-beta pruning on the same tree: leaves 4 and 6 under C are pruned">
+            <path d="M300,42 L110,96 M300,42 L300,96 M300,42 L490,96" class="ln"/>
+            <path d="M110,124 L50,179 M110,124 L110,179 M110,124 L170,179 M300,124 L240,179 M490,124 L430,179 M490,124 L490,179 M490,124 L550,179" class="ln"/>
+            <path d="M300,124 L300,179 M300,124 L360,179" class="ln-cut"/>
+            <polygon points="300,12 280,44 320,44" class="box-acc"/>
+            <text x="332" y="36" class="t-acc">A = 3</text>
+            <polygon points="92,96 128,96 110,126" class="box"/>
+            <polygon points="282,96 318,96 300,126" class="box"/>
+            <polygon points="472,96 508,96 490,126" class="box"/>
+            <text x="136" y="104" class="t-b">3</text>
+            <text x="136" y="120" class="t-m">[α=−∞, β=3]</text>
+            <text x="326" y="104" class="t-b">≤ 2</text>
+            <text x="326" y="120" class="t-m">[α=3, β=2] cut!</text>
+            <text x="516" y="104" class="t-b">2</text>
+            <text x="516" y="120" class="t-m">[α=3, β=2]</text>
+            <rect x="38" y="179" width="24" height="24" class="box"/><text x="50" y="196" text-anchor="middle" class="t-b">3</text>
+            <rect x="98" y="179" width="24" height="24" class="box"/><text x="110" y="196" text-anchor="middle" class="t-b">12</text>
+            <rect x="158" y="179" width="24" height="24" class="box"/><text x="170" y="196" text-anchor="middle" class="t-b">8</text>
+            <rect x="228" y="179" width="24" height="24" class="box"/><text x="240" y="196" text-anchor="middle" class="t-b">2</text>
+            <rect x="288" y="179" width="24" height="24" class="node-cut"/><text x="300" y="196" text-anchor="middle" class="t-bad">4</text>
+            <rect x="348" y="179" width="24" height="24" class="node-cut"/><text x="360" y="196" text-anchor="middle" class="t-bad">6</text>
+            <rect x="418" y="179" width="24" height="24" class="box"/><text x="430" y="196" text-anchor="middle" class="t-b">14</text>
+            <rect x="478" y="179" width="24" height="24" class="box"/><text x="490" y="196" text-anchor="middle" class="t-b">5</text>
+            <rect x="538" y="179" width="24" height="24" class="box"/><text x="550" y="196" text-anchor="middle" class="t-b">2</text>
+            <text x="330" y="232" text-anchor="middle" class="t-bad">pruned: never evaluated</text>
+          </svg>
+        </div>
+        <figcaption>Same tree with alpha-beta. Once C sees 2, MIN at C will return at most 2, but MAX already has 3 from B, so C's other children are irrelevant.</figcaption>
+      </figure>
+      <div class="tbl">
+        <table>
+          <thead><tr><th class="num">Step</th><th>Node</th><th>What happens</th><th>α, β</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>A (MAX)</td><td>Start</td><td class="num">−∞, +∞</td></tr>
+            <tr><td class="num">2</td><td>B (MIN)</td><td>Sees 3 → β = 3; sees 12, 8 → no change. B = 3</td><td class="num">−∞, 3</td></tr>
+            <tr><td class="num">3</td><td>A</td><td>Gets 3 from B → α = 3</td><td class="num">3, +∞</td></tr>
+            <tr><td class="num">4</td><td>C (MIN)</td><td>Sees 2 → β = 2. Now α (3) ≥ β (2) → <strong>prune 4 and 6</strong></td><td class="num">3, 2</td></tr>
+            <tr><td class="num">5</td><td>D (MIN)</td><td>Sees 14 → β = 14; 5 → β = 5; 2 → β = 2. D = 2</td><td class="num">3, 2</td></tr>
+            <tr class="win"><td class="num">6</td><td>A</td><td>max(3, 2, 2) = <strong>3</strong>, choose a1. Same answer as minimax with 2 fewer leaves evaluated.</td><td class="num">3, +∞</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Move ordering matters</h3>
+      <ul>
+        <li>If D's leaves were ordered 2, 5, 14, alpha-beta would prune after the first leaf (2 ≤ α = 3), saving two more evaluations.</li>
+        <li><strong>Perfect ordering</strong>: time <code>O(b<sup>m/2</sup>)</code>, so the effective branching factor becomes √b and alpha-beta can search <strong>twice as deep</strong> as minimax in the same time.</li>
+        <li><strong>Random ordering</strong>: about <code>O(b<sup>3m/4</sup>)</code>.</li>
+        <li>Good ordering in practice: try captures first, then threats, then forward moves; use <strong>killer moves</strong> and iterative deepening results; store positions in a <strong>transposition table</strong>.</li>
+      </ul>
+    </section>
+
+    <!-- 12 -->
+    <section id="stochastic">
+      <h2><span class="num">12</span>Stochastic &amp; partially observable games</h2>
+      <h3>Stochastic games (element of chance)</h3>
+      <p>Games like <strong>backgammon</strong> and Ludo include dice, so MAX cannot know MIN's legal moves in advance.
+      The game tree gets <strong>chance nodes</strong> (drawn as circles) between MAX and MIN layers, each branch labelled with a probability.</p>
+      <div class="key">
+        <span class="lbl">Expectiminimax</span>
+        <p class="formula">EXPECTIMINIMAX(s) = Σ<sub>r</sub> P(r) · EXPECTIMINIMAX(RESULT(s, r))   at a CHANCE node</p>
+        <p>MAX and MIN nodes work exactly as in minimax. Chance nodes take the <strong>probability-weighted average</strong> (expected value) of their children.</p>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>MAX move</th><th>Outcomes (probability → value)</th><th>Expected value</th></tr></thead>
+          <tbody>
+            <tr><td>a1</td><td>0.9 → 2, 0.1 → 3</td><td class="num">0.9×2 + 0.1×3 = <strong>2.1</strong></td></tr>
+            <tr><td>a2</td><td>0.9 → 1, 0.1 → 4</td><td class="num">0.9×1 + 0.1×4 = 1.3</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>MAX chooses a1.
+      Now change the leaf values to 20, 30, 1, 400 (same order).
+      a1 = 21, a2 = 0.9 + 40 = 40.9, so MAX now chooses <strong>a2</strong>.
+      <span class="hl">The evaluation function must be a positive linear transformation of the expected utility</span>; in deterministic games only the order of values matters, but with chance the scale matters too.</p>
+      <ul>
+        <li>Complexity <code>O(b<sup>m</sup> n<sup>m</sup>)</code> where n = number of distinct chance outcomes (21 distinct dice rolls in backgammon), so deep search is impractical.</li>
+        <li>Alpha-beta style pruning is still possible at chance nodes if utilities are bounded.</li>
+        <li><strong>Monte Carlo simulation</strong> (rollouts) is a practical alternative: play thousands of random games from a position and average the results.</li>
+      </ul>
+
+      <h3>Partially observable games</h3>
+      <p>Players cannot see the full state, like in the "fog of war".</p>
+      <div class="cards">
+        <div class="card"><h5>Kriegspiel</h5><p>Chess where you see only your own pieces. A referee announces captures and checks. The player tracks a <strong>belief state</strong>: the set of all board positions consistent with what it has observed.</p></div>
+        <div class="card"><h5>Card games</h5><p>Bridge, poker, whist, rummy. Cards are dealt randomly at the start and hidden, so the game is both stochastic and partially observable.</p></div>
+      </div>
+      <ul>
+        <li><strong>Averaging over clairvoyance</strong>: consider every possible deal of the hidden cards, solve each as a fully observable game with minimax, and pick the move with the best average value (weighted by the probability of each deal).</li>
+        <li>In practice, <strong>sample</strong> a few hundred random deals (Monte Carlo) instead of all of them.</li>
+        <li><strong>Flaw</strong>: it assumes the hidden information will be revealed after the first move. It never values <strong>information-gathering</strong> moves or <strong>bluffing</strong>, and can walk into a gamble it can't win (the classic "road A vs road B" example).</li>
+        <li>A correct approach reasons over <strong>belief states</strong>, considering what each player knows and how moves reveal information.</li>
+      </ul>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Game type</th><th>Example</th><th>Technique</th></tr></thead>
+          <tbody>
+            <tr><td>Deterministic, perfect information</td><td>Chess, Go, tic-tac-toe</td><td>Minimax + alpha-beta</td></tr>
+            <tr><td>Stochastic, perfect information</td><td>Backgammon, Ludo, Monopoly</td><td>Expectiminimax</td></tr>
+            <tr><td>Deterministic, imperfect information</td><td>Kriegspiel, Battleship</td><td>Belief states</td></tr>
+            <tr><td>Stochastic, imperfect information</td><td>Poker, bridge</td><td>Sampling / averaging over clairvoyance, belief states</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CASES -->
+    <section id="cases">
+      <h2><span class="num">★</span>Case studies &amp; scenarios</h2>
+      <p>Try each one on paper first, then open the model answer.</p>
+      <div class="toolbar">
+        <button type="button" id="openAll">Show all answers</button>
+        <button type="button" id="closeAll">Hide all answers</button>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 1 · Warehouse robot</span>
+        <p class="q">A robot in an Amazon-style warehouse moves on a grid (up, down, left, right, cost 1 per move) and must reach a shelf while avoiding blocked cells. Which search algorithm would you use and which heuristic? What changes if diagonal moves are allowed?</p>
+        <details><summary>Model answer</summary><div>
+          <p><strong>Formulation:</strong> state = (row, column); actions = 4 moves into free cells; goal = shelf cell; cost = 1 per move.</p>
+          <p><strong>Algorithm: A*</strong> with the <strong>Manhattan distance</strong> <code>h = |x₁−x₂| + |y₁−y₂|</code>.
+          It is admissible (the robot needs at least that many moves even with no obstacles) and consistent, so A* graph search returns the shortest path.</p>
+          <p><strong>Why not the others:</strong> BFS is also optimal here (unit costs) but explores in all directions and uses O(b<sup>d</sup>) memory; DFS is not optimal and can wander; greedy is fast but can take long detours around shelves.</p>
+          <p><strong>Diagonal moves:</strong> Manhattan now <strong>overestimates</strong> (one diagonal step covers 2 Manhattan units), so it is no longer admissible and A* may return a sub-optimal path.
+          Use the <strong>Chebyshev distance</strong> <code>max(|dx|, |dy|)</code> for diagonal cost 1, or the octile/Euclidean distance for diagonal cost √2.</p>
+          <p><strong>Memory limit on a small controller:</strong> switch to IDA*.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 2 · Wrong route from a GPS</span>
+        <p class="q">A navigation app always heads toward the city that is closest in straight-line distance to the destination. A user complains that it took Arad → Sibiu → Fagaras → Bucharest instead of the shorter route. Explain what happened and fix it.</p>
+        <details><summary>Model answer</summary><div>
+          <p>The app is using <strong>greedy best-first search</strong>, <code>f(n) = h(n)</code>.
+          It picked Fagaras (h = 176) over Rimnicu Vilcea (h = 193) because Fagaras looks closer, ignoring the 211 km road from Fagaras to Bucharest.
+          Result: 450 km instead of 418 km.</p>
+          <p><strong>Fix:</strong> use <strong>A*</strong>, <code>f(n) = g(n) + h(n)</code>.
+          Straight-line distance never overestimates road distance, so it is admissible and A* returns the optimal 418 km route (see the trace in section 05).</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 3 · Is this heuristic admissible?</span>
+        <p class="q">Graph: S→A (1), S→B (4), A→B (2), A→G (12), B→G (3). Heuristic: h(S) = 7, h(A) = 4, h(B) = 2, h(G) = 0. Is h admissible? Is it consistent? What will A* return?</p>
+        <details><summary>Model answer</summary><div>
+          <p><strong>True costs h*:</strong> h*(B) = 3; h*(A) = min(12, 2+3) = 5; h*(S) = min(1+5, 4+3) = 6; h*(G) = 0.</p>
+          <div class="tbl"><table>
+            <thead><tr><th>Node</th><th class="num">h</th><th class="num">h*</th><th>h ≤ h*?</th></tr></thead>
+            <tbody>
+              <tr><td>S</td><td class="num">7</td><td class="num">6</td><td class="n">No</td></tr>
+              <tr><td>A</td><td class="num">4</td><td class="num">5</td><td class="y">Yes</td></tr>
+              <tr><td>B</td><td class="num">2</td><td class="num">3</td><td class="y">Yes</td></tr>
+              <tr><td>G</td><td class="num">0</td><td class="num">0</td><td class="y">Yes</td></tr>
+            </tbody>
+          </table></div>
+          <p><strong>Not admissible</strong>, because h(S) = 7 &gt; 6.
+          <strong>Not consistent</strong> either: h(S) = 7 &gt; c(S,A) + h(A) = 1 + 4 = 5.</p>
+          <p><strong>A* run:</strong> expand S → A f=1+4=5, B f=4+2=6. Expand A → B f=3+2=5 (better path to B), G f=13+0=13. Expand B (g=3) → G f=6. Expand G (6). A* returns <strong>S→A→B→G, cost 6</strong>, which happens to be optimal here, because the overestimate is at the start node and every path passes through S.
+          In general an inadmissible h can make A* return a sub-optimal path.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 4 · University exam timetable</span>
+        <p class="q">Your college must schedule 40 end-semester exams into 10 slots and 6 rooms. No student may have two exams in the same slot, room capacity must not be exceeded, and a faculty member cannot invigilate two rooms at once. Formulate this as a CSP and explain how you would solve it efficiently.</p>
+        <details><summary>Model answer</summary><div>
+          <ul>
+            <li><strong>Variables:</strong> one per exam, E₁ … E₄₀.</li>
+            <li><strong>Domains:</strong> pairs (slot, room): 10 × 6 = 60 values each.</li>
+            <li><strong>Hard constraints:</strong>
+              <ul>
+                <li>If exams Eᵢ and Eⱼ share a student → slot(Eᵢ) ≠ slot(Eⱼ) (binary).</li>
+                <li>Enrolment(Eᵢ) ≤ capacity(room(Eᵢ)) (unary).</li>
+                <li>No two exams in the same (slot, room) → Alldiff on (slot, room) (global).</li>
+                <li>Invigilator not in two rooms in the same slot.</li>
+              </ul>
+            </li>
+            <li><strong>Soft constraints:</strong> avoid two exams for a student on the same day, heavy subjects not back to back.</li>
+          </ul>
+          <p><strong>Solving:</strong> backtracking search with</p>
+          <ul>
+            <li><strong>MRV</strong>: schedule first the exam with fewest legal (slot, room) pairs left, typically large-enrolment exams that fit only big halls.</li>
+            <li><strong>Degree heuristic</strong>: break ties with the exam that clashes with the most other exams (shared students).</li>
+            <li><strong>LCV</strong>: try the slot that blocks the fewest options for clashing exams.</li>
+            <li><strong>Forward checking / AC-3</strong> to detect dead ends early.</li>
+          </ul>
+          <p>For very large instances, use <strong>min-conflicts</strong> local search or <strong>simulated annealing</strong> starting from a random timetable, with soft constraints in the cost function.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 5 · Chess engine under a time limit</span>
+        <p class="q">You are building a chess program that must make a move within 10 seconds. Minimax on the full tree is impossible. Describe how you would design the search.</p>
+        <details><summary>Model answer</summary><div>
+          <ol>
+            <li><strong>Depth-limited minimax</strong> with a <strong>cutoff test</strong> instead of the terminal test.</li>
+            <li><strong>Evaluation function</strong>: weighted linear sum of features, e.g. material (P=1, N=B=3, R=5, Q=9), mobility, king safety, pawn structure.</li>
+            <li><strong>Alpha-beta pruning</strong> to search about twice as deep in the same time.</li>
+            <li><strong>Iterative deepening</strong>: search depth 1, 2, 3 … and always keep the best move from the last completed depth, so a move is ready when the 10 seconds end. Previous iterations also give <strong>move ordering</strong> (best moves first → more pruning).</li>
+            <li><strong>Transposition table</strong> to avoid re-evaluating positions reached by different move orders.</li>
+            <li><strong>Quiescence search</strong> to extend capture sequences and reduce the <strong>horizon effect</strong>.</li>
+            <li>Opening book and endgame tables for the start and end of the game.</li>
+          </ol>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 6 · Ludo AI</span>
+        <p class="q">In a Ludo app, the AI must choose between two moves. Move X: with probability 1/6 (rolling a six next turn) it reaches a state worth 10, otherwise a state worth 4. Move Y: with probability 1/2 it reaches a state worth 9, otherwise 3. Which algorithm applies and which move should it choose?</p>
+        <details><summary>Model answer</summary><div>
+          <p>Dice make the game <strong>stochastic</strong>, so use <strong>expectiminimax</strong> with chance nodes.</p>
+          <ul>
+            <li>E(X) = (1/6)(10) + (5/6)(4) = 1.67 + 3.33 = <strong>5.0</strong></li>
+            <li>E(Y) = (1/2)(9) + (1/2)(3) = <strong>6.0</strong></li>
+          </ul>
+          <p>Choose <strong>Y</strong>.
+          Plain minimax would wrongly treat the dice as an adversary and pick the move with the best worst case (X: 4 vs Y: 3), which ignores the probabilities.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 7 · Delivery van with 60 stops</span>
+        <p class="q">A courier company wants a short route visiting 60 drop points once each and returning to the depot. A student suggests A*. Critique this and suggest a better approach.</p>
+        <details><summary>Model answer</summary><div>
+          <p>This is the <strong>Travelling Salesman Problem</strong> (NP-hard).
+          The number of tours is (n−1)!/2 ≈ 10⁸⁰ for n = 60, so A* would run out of memory long before finishing, even with a good heuristic like the minimum spanning tree.</p>
+          <p>The path of the search does not matter, only the final tour, so <strong>local search</strong> fits:</p>
+          <ul>
+            <li>State = a complete tour; neighbour = a <strong>2-opt</strong> swap (reverse a segment of the tour).</li>
+            <li><strong>Hill climbing</strong> is fast but gets stuck in local minima; use <strong>random restarts</strong>.</li>
+            <li><strong>Simulated annealing</strong> accepts some longer tours early (high T) to escape local minima and usually gives better routes.</li>
+            <li><strong>Genetic algorithms</strong> are another option: tours as chromosomes, order crossover, swap mutation.</li>
+          </ul>
+          <p>A near-optimal route found in seconds is more useful to the business than an optimal one that never finishes.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 8 · Poker bot</span>
+        <p class="q">A poker bot computes, for each possible arrangement of the opponents' hidden cards, the best move as if all cards were visible, and then averages. Why might it play badly?</p>
+        <details><summary>Model answer</summary><div>
+          <p>This is <strong>averaging over clairvoyance</strong>.
+          It assumes that after this move the bot will know all hidden cards, which is false.
+          So it never values actions that <strong>gather information</strong> (a small bet to see how others react) or <strong>hide information</strong> (bluffing, randomising play), and it can commit to lines that only work if it could see the cards.</p>
+          <p>Poker is <strong>stochastic and partially observable</strong>; a better bot reasons over <strong>belief states</strong> (probability of each opponent hand given the betting so far) and uses sampling (Monte Carlo) plus game-theoretic mixed strategies.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 9 · Unknown depth, tiny memory</span>
+        <p class="q">A puzzle solver runs on a microcontroller with very little RAM. The solution depth is unknown, all moves cost the same, and the shortest solution is required. Which uninformed algorithm should be used?</p>
+        <details><summary>Model answer</summary><div>
+          <p><strong>Iterative deepening DFS.</strong></p>
+          <ul>
+            <li>BFS is complete and optimal but needs O(b<sup>d</sup>) memory, which the device doesn't have.</li>
+            <li>DFS uses O(bm) memory but is not optimal and may go down an infinite branch.</li>
+            <li>DLS needs a known depth limit.</li>
+            <li>IDDFS is complete and optimal for unit costs, uses only O(bd) memory, and its repeated work adds only about 11% for b = 10.</li>
+          </ul>
+          <p>If a good heuristic is available, <strong>IDA*</strong> is better still.</p>
+        </div></details>
+      </div>
+    </section>
+
+    <!-- revision -->
+    <section id="revision">
+      <h2><span class="num">14</span>Quick revision (2-mark answers)</h2>
+      <ul class="qr">
+        <li><b>Uninformed search:</b> uses only the problem definition, no domain knowledge.</li>
+        <li><b>Heuristic h(n):</b> estimated cost of the cheapest path from n to a goal.</li>
+        <li><b>Admissible:</b> h(n) ≤ h*(n); never overestimates.</li>
+        <li><b>Consistent:</b> h(n) ≤ c(n,a,n′) + h(n′); implies admissible.</li>
+        <li><b>A*:</b> f(n) = g(n) + h(n); optimal with admissible (tree) / consistent (graph) h.</li>
+        <li><b>Greedy best-first:</b> f(n) = h(n); fast but not optimal or complete.</li>
+        <li><b>IDDFS:</b> DFS memory O(bd) with BFS completeness and optimality.</li>
+        <li><b>Dominance:</b> h₂ ≥ h₁ everywhere ⇒ h₂ expands no more nodes.</li>
+        <li><b>Local maximum:</b> peak better than neighbours but not globally best.</li>
+        <li><b>Simulated annealing:</b> accepts bad moves with probability e<sup>ΔE/T</sup>.</li>
+        <li><b>CSP:</b> variables X, domains D, constraints C.</li>
+        <li><b>MRV:</b> choose the variable with the fewest legal values left.</li>
+        <li><b>LCV:</b> choose the value that rules out the fewest options for neighbours.</li>
+        <li><b>Forward checking:</b> after assigning, prune neighbours' domains.</li>
+        <li><b>Arc consistent:</b> every value of X has a supporting value in Y.</li>
+        <li><b>Minimax:</b> MAX maximises, MIN minimises; O(b<sup>m</sup>) time.</li>
+        <li><b>Alpha-beta:</b> prunes when α ≥ β; best case O(b<sup>m/2</sup>).</li>
+        <li><b>Horizon effect:</b> pushing an unavoidable loss beyond the search depth.</li>
+        <li><b>Expectiminimax:</b> minimax plus chance nodes that take expected values.</li>
+        <li><b>Belief state:</b> set of all states consistent with the agent's observations.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer class="end">
+  <a href="unit1.html">← Back to Unit I: Intelligent Agents</a>
+  <span>BCS701 · Unit II notes · Reference: Russell &amp; Norvig, AIMA 4th ed.</span>
+</footer>
+
+<script>
+  document.getElementById('openAll').addEventListener('click', () => document.querySelectorAll('.case details').forEach(d => d.open = true));
+  document.getElementById('closeAll').addEventListener('click', () => document.querySelectorAll('.case details').forEach(d => d.open = false));
+</script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit I: Intelligent Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&display=swap">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="course">
+    <a href="index.html">All units</a>
+    <span>BCS701 · Artificial Intelligence · AKTU</span>
+    <a href="unit2.html">Go to Unit II →</a>
+  </div>
+  <h1><span class="unit-no">Unit I.</span> Introduction to AI &amp; Intelligent Agents</h1>
+  <p class="scope">Definition and scope of AI, history and applications, characteristics of intelligent agents, types of agents and environments, agent architecture, problem-solving approach, problem-solving agents, example problems.</p>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Topics">
+    <p>Topics</p>
+    <ol>
+      <li><a href="#definition">Definition of AI</a></li>
+      <li><a href="#scope">Scope &amp; foundations</a></li>
+      <li><a href="#history">History</a></li>
+      <li><a href="#applications">Applications</a></li>
+      <li><a href="#agents">Intelligent agents</a></li>
+      <li><a href="#peas">PEAS</a></li>
+      <li><a href="#environments">Types of environments</a></li>
+      <li><a href="#agent-types">Types of agents</a></li>
+      <li><a href="#problem-solving">Problem-solving agents</a></li>
+      <li><a href="#examples">Example problems</a></li>
+      <li><a class="case" href="#cases">Case studies</a></li>
+      <li><a href="#revision">Quick revision</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="tip">
+      <b class="lbl">How to score in case-study questions</b>
+      <p>Almost every scenario question in this unit comes down to four steps.</p>
+      <ol>
+        <li>Write the <strong>PEAS</strong> description.</li>
+        <li>Classify the <strong>environment</strong> using the 7 properties, with a reason for each.</li>
+        <li>Pick the <strong>agent type</strong> and say why simpler types fail.</li>
+        <li><strong>Formulate the problem</strong>: states, actions, transition model, goal test, path cost.</li>
+      </ol>
+    </div>
+
+    <!-- 1 -->
+    <section id="definition">
+      <h2><span class="num">01</span>Definition of AI</h2>
+      <p>Artificial Intelligence is the study and design of <strong>agents</strong> that perceive their environment and take actions that maximise their chance of achieving goals.</p>
+      <p>Russell &amp; Norvig arrange definitions of AI along two axes: <em>thinking vs acting</em>, and <em>human-like vs rational</em>.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th></th><th>Human-like</th><th>Rational (ideal)</th></tr></thead>
+          <tbody>
+            <tr><th>Thinking</th><td><strong>Thinking Humanly</strong><br>Cognitive modelling</td><td><strong>Thinking Rationally</strong><br>Laws of thought (logic)</td></tr>
+            <tr><th>Acting</th><td><strong>Acting Humanly</strong><br>Turing Test</td><td><strong>Acting Rationally</strong><br>Rational agent <span class="hl">(approach used in this course)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Acting humanly: the Turing Test (1950)</h3>
+      <p>A human interrogator chats through text with a machine and a human.
+      If the interrogator cannot reliably tell which one is the machine, the machine passes.</p>
+      <p>To pass, a computer needs four capabilities:</p>
+      <ul>
+        <li><strong>Natural Language Processing</strong> to communicate.</li>
+        <li><strong>Knowledge Representation</strong> to store what it knows or hears.</li>
+        <li><strong>Automated Reasoning</strong> to answer questions and draw new conclusions.</li>
+        <li><strong>Machine Learning</strong> to adapt to new situations and detect patterns.</li>
+      </ul>
+      <p>The <strong>Total Turing Test</strong> adds a video signal and passing physical objects, so it also needs <strong>Computer Vision</strong> and <strong>Robotics</strong>.</p>
+
+      <h3>Thinking humanly: cognitive modelling</h3>
+      <p>Build programs whose internal steps match how humans think.
+      Theories come from introspection, psychological experiments and brain imaging.
+      Example: Newell and Simon's <strong>GPS (General Problem Solver)</strong> compared its reasoning trace with human subjects solving the same problems.</p>
+
+      <h3>Thinking rationally: laws of thought</h3>
+      <p>Based on Aristotle's syllogisms and formal logic: <em>"Socrates is a man; all men are mortal; therefore Socrates is mortal."</em></p>
+      <p>Two problems: informal and uncertain knowledge is hard to write in logic, and solving a problem "in principle" is very different from solving it in practice (computation blows up).</p>
+
+      <h3>Acting rationally: the rational agent</h3>
+      <p>A <strong>rational agent</strong> acts to achieve the best outcome, or the best <em>expected</em> outcome when there is uncertainty.
+      Modern AI prefers this approach because it is more general than the laws of thought (correct inference is only one way to act rationally) and it is mathematically well-defined, unlike "behave like a human".</p>
+    </section>
+
+    <!-- 2 -->
+    <section id="scope">
+      <h2><span class="num">02</span>Scope &amp; foundations of AI</h2>
+      <p>AI borrows ideas from many disciplines.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Discipline</th><th>What it gave AI</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Philosophy</strong></td><td>Logic, reasoning, the mind as a physical system, ethics of action</td></tr>
+            <tr><td><strong>Mathematics</strong></td><td>Formal logic, probability, computability, algorithms, complexity (NP-completeness)</td></tr>
+            <tr><td><strong>Economics</strong></td><td>Utility, decision theory, game theory</td></tr>
+            <tr><td><strong>Neuroscience</strong></td><td>How brains process information, which inspired neural networks</td></tr>
+            <tr><td><strong>Psychology</strong></td><td>How humans think and act, cognitive science</td></tr>
+            <tr><td><strong>Computer engineering</strong></td><td>Fast hardware (GPUs, TPUs) to run AI programs</td></tr>
+            <tr><td><strong>Control theory</strong></td><td>Systems that maximise an objective over time using feedback</td></tr>
+            <tr><td><strong>Linguistics</strong></td><td>Grammar and structure of language, which became NLP</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <strong>scope</strong> of AI today covers perception (vision, speech), reasoning and planning, learning, language, robotics, and multi-agent systems.
+      It is commonly split into <strong>Narrow (weak) AI</strong>, which solves one task such as face recognition, and <strong>General (strong) AI</strong>, a hypothetical system with human-level ability across all tasks.</p>
+    </section>
+
+    <!-- 3 -->
+    <section id="history">
+      <h2><span class="num">03</span>History of AI</h2>
+      <div class="tbl">
+        <table>
+          <thead><tr><th class="num">Year</th><th>Milestone</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1943</td><td>McCulloch &amp; Pitts propose the first model of an artificial neuron</td></tr>
+            <tr><td class="num">1950</td><td>Alan Turing publishes "Computing Machinery and Intelligence" and proposes the Turing Test</td></tr>
+            <tr class="win"><td class="num">1956</td><td><strong>Dartmouth Conference</strong>: John McCarthy coins the term "Artificial Intelligence". This is the birth of AI.</td></tr>
+            <tr><td class="num">1956–74</td><td>Early enthusiasm: Logic Theorist, GPS, LISP (1958), ELIZA chatbot (1966), Shakey the robot</td></tr>
+            <tr><td class="num">1974–80</td><td><strong>First AI winter</strong>: promises not met, weak hardware, funding cut after the Lighthill Report</td></tr>
+            <tr><td class="num">1980s</td><td>Expert systems boom: MYCIN (medical diagnosis), XCON/R1 (DEC computer configuration)</td></tr>
+            <tr><td class="num">1986</td><td>Backpropagation popularised by Rumelhart, Hinton and Williams</td></tr>
+            <tr><td class="num">1987–93</td><td><strong>Second AI winter</strong>: expert systems proved expensive and brittle</td></tr>
+            <tr><td class="num">1997</td><td>IBM <strong>Deep Blue</strong> defeats world chess champion Garry Kasparov</td></tr>
+            <tr><td class="num">2011</td><td>IBM <strong>Watson</strong> wins Jeopardy!, Apple launches Siri</td></tr>
+            <tr><td class="num">2012</td><td>AlexNet wins ImageNet, starting the deep-learning era</td></tr>
+            <tr><td class="num">2016</td><td>DeepMind <strong>AlphaGo</strong> defeats Go champion Lee Sedol</td></tr>
+            <tr><td class="num">2017</td><td>"Attention Is All You Need" introduces the Transformer</td></tr>
+            <tr><td class="num">2020s</td><td>Large language models (GPT, Claude, Gemini), generative AI, AlphaFold for protein structure</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="applications">
+      <h2><span class="num">04</span>Applications of AI</h2>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Field</th><th>Examples</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Healthcare</strong></td><td>Diagnosis from X-ray/MRI, drug discovery, AlphaFold</td></tr>
+            <tr><td><strong>Transport</strong></td><td>Self-driving cars, route optimisation in Google Maps, traffic signal control</td></tr>
+            <tr><td><strong>Finance</strong></td><td>Fraud detection, algorithmic trading, credit scoring</td></tr>
+            <tr><td><strong>E-commerce</strong></td><td>Recommendations on Amazon and Netflix, dynamic pricing</td></tr>
+            <tr><td><strong>Language</strong></td><td>Chatbots, machine translation, voice assistants</td></tr>
+            <tr><td><strong>Robotics</strong></td><td>Warehouse robots, Mars rovers, surgical robots</td></tr>
+            <tr><td><strong>Games</strong></td><td>Chess, Go, video-game characters</td></tr>
+            <tr><td><strong>Agriculture</strong></td><td>Crop disease detection, precision spraying drones</td></tr>
+            <tr><td><strong>Security</strong></td><td>Face recognition, spam filtering, intrusion detection</td></tr>
+            <tr><td><strong>Education</strong></td><td>Personalised tutors, automatic grading, online proctoring</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section id="agents">
+      <h2><span class="num">05</span>Intelligent agents</h2>
+      <p>An <strong>agent</strong> is anything that perceives its environment through <strong>sensors</strong> and acts on it through <strong>actuators</strong>.</p>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 600 220" width="600" role="img" aria-label="Agent receives percepts from the environment through sensors and acts through actuators">
+            <defs>
+              <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker>
+            </defs>
+            <rect x="20" y="30" width="170" height="160" rx="12" class="box-soft"/>
+            <text x="105" y="115" text-anchor="middle" class="t-b">Environment</text>
+            <rect x="330" y="20" width="250" height="180" rx="12" class="box"/>
+            <text x="455" y="45" text-anchor="middle" class="t-b">Agent</text>
+            <rect x="350" y="60" width="210" height="34" rx="6" class="box-acc"/>
+            <text x="455" y="82" text-anchor="middle" class="t">Sensors</text>
+            <rect x="380" y="104" width="150" height="36" rx="6" class="box"/>
+            <text x="455" y="127" text-anchor="middle" class="t-acc">Agent program ?</text>
+            <rect x="350" y="150" width="210" height="34" rx="6" class="box-acc"/>
+            <text x="455" y="172" text-anchor="middle" class="t">Actuators</text>
+            <path d="M190,77 L348,77" class="ln" marker-end="url(#ar1)"/>
+            <text x="268" y="68" text-anchor="middle" class="t-acc">Percepts</text>
+            <path d="M350,167 L192,167" class="ln" marker-end="url(#ar1)"/>
+            <text x="268" y="158" text-anchor="middle" class="t-acc">Actions</text>
+            <path d="M455,94 L455,102" class="ln-soft" marker-end="url(#ar1)"/>
+            <path d="M455,140 L455,148" class="ln-soft" marker-end="url(#ar1)"/>
+          </svg>
+        </div>
+        <figcaption>The agent-environment loop. The "?" is what AI designs: the program that maps percepts to actions.</figcaption>
+      </figure>
+
+      <h3>Key terms</h3>
+      <dl class="terms">
+        <dt>Percept</dt><dd>The agent's perceptual input at one instant.</dd>
+        <dt>Percept sequence</dt><dd>The complete history of everything the agent has ever perceived.</dd>
+        <dt>Agent function</dt><dd>An abstract mathematical mapping from percept sequences to actions, <code>f : P* → A</code>.</dd>
+        <dt>Agent program</dt><dd>The concrete code that implements the agent function on a physical system.</dd>
+        <dt>Architecture</dt><dd>The computing device with sensors and actuators. <strong>Agent = Architecture + Program.</strong></dd>
+      </dl>
+
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Agent</th><th>Sensors</th><th>Actuators</th></tr></thead>
+          <tbody>
+            <tr><td>Human</td><td>Eyes, ears, nose, skin</td><td>Hands, legs, vocal tract</td></tr>
+            <tr><td>Robot</td><td>Cameras, infrared range finders, LIDAR</td><td>Motors, grippers, wheels</td></tr>
+            <tr><td>Software agent</td><td>Keystrokes, file contents, network packets</td><td>Screen display, writing files, sending packets</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: the vacuum-cleaner world</h3>
+      <p>Two squares, A and B.
+      Percept is <code>[location, status]</code>, for example <code>[A, Dirty]</code>.
+      Actions are <code>Left</code>, <code>Right</code>, <code>Suck</code>, <code>NoOp</code>.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Percept</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>[A, Clean]</code></td><td>Right</td></tr>
+            <tr><td><code>[A, Dirty]</code></td><td>Suck</td></tr>
+            <tr><td><code>[B, Clean]</code></td><td>Left</td></tr>
+            <tr><td><code>[B, Dirty]</code></td><td>Suck</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Rationality: characteristics of an intelligent agent</h3>
+      <div class="key">
+        <span class="lbl">Definition of a rational agent</span>
+        <p>For each possible percept sequence, a rational agent selects an action that is expected to <strong>maximise its performance measure</strong>, given the evidence from the percept sequence and whatever built-in knowledge it has.</p>
+      </div>
+      <p>What is rational at any moment depends on four things:</p>
+      <ol>
+        <li>The <strong>performance measure</strong> that defines success.</li>
+        <li>The agent's <strong>prior knowledge</strong> of the environment.</li>
+        <li>The <strong>actions</strong> the agent can perform.</li>
+        <li>The agent's <strong>percept sequence</strong> to date.</li>
+      </ol>
+      <div class="split">
+        <div>
+          <h5>Rational ≠ Omniscient</h5>
+          <p>An omniscient agent knows the <em>actual</em> outcome of its actions.
+          A rational agent maximises <em>expected</em> performance.
+          Crossing the road after looking both ways is rational even if a falling aircraft door hits you.</p>
+        </div>
+        <div>
+          <h5>Information gathering</h5>
+          <p>Doing actions to get useful future percepts (looking before crossing, exploring an unknown map) is part of being rational.</p>
+        </div>
+        <div>
+          <h5>Learning</h5>
+          <p>A rational agent should learn as much as possible from what it perceives, not only rely on the designer's prior knowledge.</p>
+        </div>
+        <div>
+          <h5>Autonomy</h5>
+          <p>An agent is autonomous when its behaviour depends on its own experience.
+          A dung beetle that keeps plugging a nest after the ball is removed lacks autonomy.</p>
+        </div>
+      </div>
+      <p>Other characteristics often asked in exams: <strong>situatedness</strong> (lives inside an environment), <strong>reactivity</strong> (responds in time to changes), <strong>pro-activeness</strong> (goal-directed, takes initiative), <strong>social ability</strong> (communicates with other agents) and <strong>adaptability</strong>.</p>
+    </section>
+
+    <!-- 6 -->
+    <section id="peas">
+      <h2><span class="num">06</span>PEAS: specifying the task environment</h2>
+      <p><strong>P</strong>erformance measure, <strong>E</strong>nvironment, <strong>A</strong>ctuators, <strong>S</strong>ensors.
+      Writing PEAS is always the first step in designing an agent.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Agent</th><th>Performance</th><th>Environment</th><th>Actuators</th><th>Sensors</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Automated taxi</strong></td><td>Safe, fast, legal, comfortable trip; maximise profit</td><td>Roads, traffic, pedestrians, customers, weather</td><td>Steering, accelerator, brake, indicators, horn, display</td><td>Cameras, LIDAR, radar, GPS, speedometer, odometer, engine sensors</td></tr>
+            <tr><td><strong>Medical diagnosis</strong></td><td>Healthy patient, low cost, fewer lawsuits</td><td>Patient, hospital, staff</td><td>Display of questions, tests, diagnoses, treatments</td><td>Keyboard entry of symptoms, findings, patient answers</td></tr>
+            <tr><td><strong>Part-picking robot</strong></td><td>% of parts in correct bins</td><td>Conveyor belt with parts, bins</td><td>Jointed arm and hand</td><td>Camera, joint angle sensors</td></tr>
+            <tr><td><strong>English tutor</strong></td><td>Student's score on test</td><td>Set of students, testing agency</td><td>Display of exercises, suggestions, corrections</td><td>Keyboard entry</td></tr>
+            <tr><td><strong>Spam filter</strong></td><td>Few false positives and false negatives</td><td>User's mailbox, mail server</td><td>Mark as spam, move to folder</td><td>Email text, headers, sender reputation</td></tr>
+            <tr><td><strong>Robot vacuum</strong></td><td>Area cleaned, battery used, time taken</td><td>Rooms, furniture, dirt, people, pets</td><td>Wheels, brushes, suction</td><td>Bump, cliff and dirt sensors, camera</td></tr>
+            <tr><td><strong>Delivery drone</strong></td><td>On-time delivery, safety, battery use</td><td>Airspace, buildings, weather, landing zones</td><td>Propellers, package release</td><td>GPS, camera, altimeter, IMU</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section id="environments">
+      <h2><span class="num">07</span>Types of environments</h2>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Property</th><th>Easy side</th><th>Hard side</th><th>Question to ask</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Observability</strong></td><td>Fully observable</td><td>Partially observable</td><td>Do the sensors give the complete relevant state at every moment?</td></tr>
+            <tr><td><strong>Agents</strong></td><td>Single-agent</td><td>Multi-agent (competitive or cooperative)</td><td>Is another entity maximising its own performance that depends on mine?</td></tr>
+            <tr><td><strong>Determinism</strong></td><td>Deterministic</td><td>Stochastic</td><td>Is the next state fully fixed by the current state and action?</td></tr>
+            <tr><td><strong>Episodes</strong></td><td>Episodic</td><td>Sequential</td><td>Does the current decision affect future decisions?</td></tr>
+            <tr><td><strong>Change</strong></td><td>Static</td><td>Dynamic (semi-dynamic)</td><td>Does the world change while the agent is deciding? Semi-dynamic: the world is fixed but the score changes with time.</td></tr>
+            <tr><td><strong>Values</strong></td><td>Discrete</td><td>Continuous</td><td>Is there a finite number of distinct states, percepts and actions?</td></tr>
+            <tr><td><strong>Knowledge</strong></td><td>Known</td><td>Unknown</td><td>Does the agent know the rules/outcomes of its actions?</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <b class="lbl">Remember</b>
+        <p>The hardest combination is partially observable, multi-agent, stochastic, sequential, dynamic, continuous and unknown.
+        Taxi driving is the textbook example.
+        "Known vs unknown" is about the agent's knowledge of the rules, not the environment itself, so a known environment can still be partially observable (solitaire) and an unknown one can be fully observable (a new video game).</p>
+      </div>
+      <h3>Classification of common tasks</h3>
+      <p class="muted">This table is asked very often. Learn the reasoning, not just the words.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Task</th><th>Observable</th><th>Agents</th><th>Deterministic</th><th>Episodic</th><th>Static</th><th>Discrete</th></tr></thead>
+          <tbody>
+            <tr><td>Crossword puzzle</td><td>Fully</td><td>Single</td><td>Deterministic</td><td>Sequential</td><td>Static</td><td>Discrete</td></tr>
+            <tr><td>Chess with a clock</td><td>Fully</td><td>Multi</td><td>Deterministic</td><td>Sequential</td><td>Semi</td><td>Discrete</td></tr>
+            <tr><td>Poker</td><td>Partially</td><td>Multi</td><td>Stochastic</td><td>Sequential</td><td>Static</td><td>Discrete</td></tr>
+            <tr><td>Backgammon</td><td>Fully</td><td>Multi</td><td>Stochastic</td><td>Sequential</td><td>Static</td><td>Discrete</td></tr>
+            <tr><td>Taxi driving</td><td>Partially</td><td>Multi</td><td>Stochastic</td><td>Sequential</td><td>Dynamic</td><td>Continuous</td></tr>
+            <tr><td>Medical diagnosis</td><td>Partially</td><td>Single</td><td>Stochastic</td><td>Sequential</td><td>Dynamic</td><td>Continuous</td></tr>
+            <tr><td>Image analysis</td><td>Fully</td><td>Single</td><td>Deterministic</td><td>Episodic</td><td>Semi</td><td>Continuous</td></tr>
+            <tr><td>Part-picking robot</td><td>Partially</td><td>Single</td><td>Stochastic</td><td>Episodic</td><td>Dynamic</td><td>Continuous</td></tr>
+            <tr><td>Refinery controller</td><td>Partially</td><td>Single</td><td>Stochastic</td><td>Sequential</td><td>Dynamic</td><td>Continuous</td></tr>
+            <tr><td>English tutor</td><td>Partially</td><td>Multi</td><td>Stochastic</td><td>Sequential</td><td>Dynamic</td><td>Discrete</td></tr>
+            <tr><td>8-puzzle</td><td>Fully</td><td>Single</td><td>Deterministic</td><td>Sequential</td><td>Static</td><td>Discrete</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section id="agent-types">
+      <h2><span class="num">08</span>Types of agents (agent architectures)</h2>
+      <p>Five basic agent programs, in increasing order of generality.
+      Each one adds a capability that the previous one lacks.</p>
+
+      <h3>1. Simple reflex agent</h3>
+      <div class="flow"><span>Sensors</span><i>→</i><span>What the world is like now</span><i>→</i><span class="em">Condition-action rules</span><i>→</i><span>What action to do</span><i>→</i><span>Actuators</span></div>
+      <ul>
+        <li>Acts only on the <strong>current percept</strong> and ignores history.</li>
+        <li>Uses <strong>condition-action (if-then) rules</strong>: <code>if car-in-front-is-braking then initiate-braking</code>.</li>
+        <li>Works correctly only if the environment is <strong>fully observable</strong>.</li>
+        <li>In partially observable worlds it can fall into <strong>infinite loops</strong>. Randomising actions helps.</li>
+      </ul>
+<pre><code><span class="kw">function</span> SIMPLE-REFLEX-AGENT(percept):
+    state ← INTERPRET-INPUT(percept)
+    rule  ← RULE-MATCH(state, rules)
+    <span class="kw">return</span> rule.ACTION</code></pre>
+      <p class="muted">Examples: thermostat, automatic door, basic vacuum cleaner.</p>
+
+      <h3>2. Model-based reflex agent</h3>
+      <div class="flow"><span>Sensors</span><i>→</i><span class="em">Internal state + model of world</span><i>→</i><span>Condition-action rules</span><i>→</i><span>Actuators</span></div>
+      <ul>
+        <li>Keeps an <strong>internal state</strong> tracking the parts of the world it cannot see right now.</li>
+        <li>Needs a <strong>transition model</strong> (how the world changes on its own and due to my actions) and a <strong>sensor model</strong> (how world state shows up in percepts).</li>
+        <li>Handles <strong>partially observable</strong> environments.</li>
+      </ul>
+<pre><code><span class="kw">function</span> MODEL-BASED-REFLEX-AGENT(percept):
+    state ← UPDATE-STATE(state, action, percept, transition_model, sensor_model)
+    rule  ← RULE-MATCH(state, rules)
+    action ← rule.ACTION
+    <span class="kw">return</span> action</code></pre>
+      <p class="muted">Example: a car that remembers a vehicle is in its blind spot even when the mirror no longer shows it.</p>
+
+      <h3>3. Goal-based agent</h3>
+      <div class="flow"><span>State + model</span><i>→</i><span>"What will happen if I do A?"</span><i>→</i><span class="em">Goals</span><i>→</i><span>Action</span></div>
+      <ul>
+        <li>Has <strong>goal information</strong> describing desirable situations.</li>
+        <li>Thinks ahead using <strong>search and planning</strong>.</li>
+        <li>More flexible: change the goal and the behaviour changes without rewriting rules.</li>
+      </ul>
+      <p class="muted">Example: a navigation app asked to reach Lucknow Charbagh station.</p>
+
+      <h3>4. Utility-based agent</h3>
+      <div class="flow"><span>State + model</span><i>→</i><span>"What will happen if I do A?"</span><i>→</i><span class="em">"How happy will I be?" (utility)</span><i>→</i><span>Action</span></div>
+      <ul>
+        <li>Goals give only a binary happy/unhappy; a <strong>utility function</strong> maps each state to a real number.</li>
+        <li>Needed when goals <strong>conflict</strong> (speed vs safety) or when no goal can be reached with certainty, so likelihood must be weighed against importance.</li>
+        <li>A rational utility-based agent maximises <strong>expected utility</strong>.</li>
+      </ul>
+      <p class="muted">Example: a taxi choosing a route that is fast, safe and cheap at the same time.</p>
+
+      <h3>5. Learning agent</h3>
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 620 320" width="620" role="img" aria-label="Learning agent with critic, learning element, performance element and problem generator">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker>
+            </defs>
+            <rect x="10" y="40" width="110" height="220" rx="12" class="box-soft"/>
+            <text x="65" y="155" text-anchor="middle" class="t-b">Environment</text>
+            <rect x="160" y="10" width="450" height="300" rx="14" class="box" style="fill:none"/>
+            <text x="590" y="32" text-anchor="end" class="t-m">AGENT</text>
+            <text x="270" y="32" text-anchor="middle" class="t-m">performance standard</text>
+            <path d="M270,38 L270,58" class="ln-soft" marker-end="url(#ar2)"/>
+            <rect x="190" y="60" width="160" height="42" rx="8" class="box-acc"/>
+            <text x="270" y="86" text-anchor="middle" class="t-b">Critic</text>
+            <rect x="190" y="150" width="160" height="42" rx="8" class="box-acc"/>
+            <text x="270" y="176" text-anchor="middle" class="t-b">Learning element</text>
+            <rect x="190" y="240" width="160" height="42" rx="8" class="box-acc"/>
+            <text x="270" y="266" text-anchor="middle" class="t-b">Problem generator</text>
+            <rect x="430" y="140" width="160" height="62" rx="8" class="box"/>
+            <text x="510" y="168" text-anchor="middle" class="t-b">Performance</text>
+            <text x="510" y="186" text-anchor="middle" class="t-b">element</text>
+            <path d="M120,81 L188,81" class="ln" marker-end="url(#ar2)"/>
+            <text x="154" y="73" text-anchor="middle" class="t-m">percepts</text>
+            <path d="M350,81 L510,81 L510,138" class="ln-soft" marker-end="url(#ar2)"/>
+            <path d="M270,102 L270,148" class="ln" marker-end="url(#ar2)"/>
+            <text x="278" y="130" class="t-m">feedback</text>
+            <path d="M350,162 L428,162" class="ln" marker-end="url(#ar2)"/>
+            <text x="389" y="155" text-anchor="middle" class="t-m">changes</text>
+            <path d="M430,182 L352,182" class="ln" marker-end="url(#ar2)"/>
+            <text x="389" y="198" text-anchor="middle" class="t-m">knowledge</text>
+            <path d="M270,192 L270,238" class="ln" marker-end="url(#ar2)"/>
+            <text x="278" y="220" class="t-m">learning goals</text>
+            <path d="M350,261 L470,261 L470,204" class="ln" marker-end="url(#ar2)"/>
+            <text x="410" y="254" text-anchor="middle" class="t-m">explore</text>
+            <path d="M550,202 L550,296 L65,296 L65,262" class="ln" marker-end="url(#ar2)"/>
+            <text x="560" y="250" class="t-m">actions</text>
+          </svg>
+        </div>
+        <figcaption>Learning agent. The performance element is the "whole agent" from types 1-4; the other three parts make it improve.</figcaption>
+      </figure>
+      <dl class="terms">
+        <dt>Performance element</dt><dd>Selects external actions.</dd>
+        <dt>Critic</dt><dd>Tells how well the agent is doing against a fixed <strong>performance standard</strong>.</dd>
+        <dt>Learning element</dt><dd>Uses the critic's feedback to improve the performance element.</dd>
+        <dt>Problem generator</dt><dd>Suggests <strong>exploratory</strong> actions that lead to new, informative experiences.</dd>
+      </dl>
+      <p class="muted">Example: a spam filter that improves when users click "Not spam", or a self-driving car that learns from driver takeovers.</p>
+
+      <h3>Comparison</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Agent type</th><th>Remembers past</th><th>Has goal</th><th>Measures "how good"</th><th>Learns</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Simple reflex</td><td class="n">No</td><td class="n">No</td><td class="n">No</td><td class="n">No</td><td>Thermostat</td></tr>
+            <tr><td>Model-based reflex</td><td class="y">Yes</td><td class="n">No</td><td class="n">No</td><td class="n">No</td><td>Blind-spot tracking car</td></tr>
+            <tr><td>Goal-based</td><td class="y">Yes</td><td class="y">Yes</td><td class="n">No</td><td class="n">No</td><td>Route finder</td></tr>
+            <tr><td>Utility-based</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td><td class="n">No</td><td>Taxi balancing time, cost, safety</td></tr>
+            <tr><td>Learning</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td><td>Recommendation system</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Agent architecture and state representation</h3>
+      <p><strong>Agent = Architecture + Program.</strong>
+      The program must suit the architecture: a program that says "Walk" only makes sense if the architecture has legs.</p>
+      <div class="cards">
+        <div class="card"><h5>Atomic</h5><p>State is a black box with no internal structure.</p><span class="eg">Used in: search, game playing</span></div>
+        <div class="card"><h5>Factored</h5><p>State is a set of variables with values.</p><span class="eg">Used in: CSP, propositional logic, Bayes nets</span></div>
+        <div class="card"><h5>Structured</h5><p>State has objects and relationships between them.</p><span class="eg">Used in: first-order logic, NLP</span></div>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section id="problem-solving">
+      <h2><span class="num">09</span>Problem-solving agents</h2>
+      <p>A <strong>problem-solving agent</strong> is a goal-based agent that uses an <strong>atomic</strong> representation and <strong>searches</strong> for a sequence of actions that reaches the goal.</p>
+      <h3>Four phases</h3>
+      <div class="flow"><span class="em">1. Goal formulation</span><i>→</i><span class="em">2. Problem formulation</span><i>→</i><span class="em">3. Search</span><i>→</i><span class="em">4. Execution</span></div>
+<pre><code><span class="kw">function</span> SIMPLE-PROBLEM-SOLVING-AGENT(percept):
+    state ← UPDATE-STATE(state, percept)
+    <span class="kw">if</span> seq is empty:
+        goal    ← FORMULATE-GOAL(state)
+        problem ← FORMULATE-PROBLEM(state, goal)
+        seq     ← SEARCH(problem)
+        <span class="kw">if</span> seq = failure: <span class="kw">return</span> null-action
+    action ← FIRST(seq);  seq ← REST(seq)
+    <span class="kw">return</span> action</code></pre>
+      <p>While executing, this agent ignores its percepts because it trusts the plan.
+      This is called <strong>open-loop</strong> execution and is safe only in fully observable, deterministic, known environments.
+      Otherwise the agent should use <strong>closed-loop</strong> execution and keep checking its percepts.</p>
+
+      <h3>Components of a well-defined problem</h3>
+      <div class="key">
+        <span class="lbl">Five components (write all five in every formulation answer)</span>
+        <ol>
+          <li><strong>Initial state</strong>: where the agent starts, e.g. <code>In(Arad)</code>.</li>
+          <li><strong>Actions</strong>: <code>ACTIONS(s)</code> returns the actions applicable in state s.</li>
+          <li><strong>Transition model</strong>: <code>RESULT(s, a)</code> returns the state reached by doing a in s.</li>
+          <li><strong>Goal test</strong>: decides whether a state is a goal.</li>
+          <li><strong>Path cost</strong>: sum of step costs <code>c(s, a, s′)</code>.</li>
+        </ol>
+      </div>
+      <dl class="terms">
+        <dt>State space</dt><dd>All states reachable from the initial state; forms a graph.</dd>
+        <dt>Solution</dt><dd>An action sequence leading from the initial state to a goal state.</dd>
+        <dt>Optimal solution</dt><dd>The solution with the lowest path cost.</dd>
+        <dt>Abstraction</dt><dd>Removing irrelevant detail (weather, radio station) so the problem becomes tractable. A good abstraction removes as much detail as possible while keeping the solution valid.</dd>
+      </dl>
+    </section>
+
+    <!-- 10 -->
+    <section id="examples">
+      <h2><span class="num">10</span>Example problems</h2>
+
+      <h3>Vacuum world</h3>
+      <div class="tbl"><table><tbody>
+        <tr><th>States</th><td>Agent location (2) × dirt status of each square (2²) = <strong>8 states</strong>. With n squares: <code>n · 2ⁿ</code>.</td></tr>
+        <tr><th>Initial state</th><td>Any state</td></tr>
+        <tr><th>Actions</th><td>Left, Right, Suck</td></tr>
+        <tr><th>Transition</th><td>Left in A or Right in B has no effect; Suck cleans the current square</td></tr>
+        <tr><th>Goal test</th><td>All squares clean</td></tr>
+        <tr><th>Path cost</th><td>1 per step</td></tr>
+      </tbody></table></div>
+
+      <h3>8-puzzle</h3>
+      <div class="split">
+        <div>
+          <h5>Start</h5>
+<pre style="margin:0;text-align:center;font-size:18px"><code>7 2 4
+5 _ 6
+8 3 1</code></pre>
+        </div>
+        <div>
+          <h5>Goal</h5>
+<pre style="margin:0;text-align:center;font-size:18px"><code>_ 1 2
+3 4 5
+6 7 8</code></pre>
+        </div>
+      </div>
+      <div class="tbl"><table><tbody>
+        <tr><th>States</th><td>Location of each of the 8 tiles and the blank. Only <strong>9!/2 = 181,440</strong> states are reachable (half of all arrangements).</td></tr>
+        <tr><th>Actions</th><td>Move the blank Left, Right, Up, Down</td></tr>
+        <tr><th>Goal test</th><td>State matches the goal configuration</td></tr>
+        <tr><th>Path cost</th><td>1 per move</td></tr>
+      </tbody></table></div>
+
+      <h3>8-queens</h3>
+      <p>Place 8 queens on a chessboard so that no two attack each other.</p>
+      <ul>
+        <li><strong>Incremental formulation</strong>: start empty and add one queen at a time. Naive version has about 1.8 × 10¹⁴ sequences. Placing each queen in the leftmost empty column where it is not attacked cuts this to <strong>2,057</strong> states.</li>
+        <li><strong>Complete-state formulation</strong>: all 8 queens on the board, move them to reduce attacks. Used by local search in Unit II.</li>
+      </ul>
+
+      <h3>Water jug problem</h3>
+      <p>A 4-litre and a 3-litre jug with no markings, and a tap. Get exactly 2 litres in the 4-litre jug.</p>
+      <div class="tbl"><table><tbody>
+        <tr><th>State</th><td><code>(x, y)</code>, x = litres in 4 L jug (0–4), y = litres in 3 L jug (0–3)</td></tr>
+        <tr><th>Initial / goal</th><td><code>(0, 0)</code> → <code>(2, n)</code> for any n</td></tr>
+        <tr><th>Actions</th><td>Fill 4 L, fill 3 L, empty 4 L, empty 3 L, pour 4→3 until 3 is full or 4 is empty, pour 3→4 until 4 is full or 3 is empty</td></tr>
+      </tbody></table></div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th class="num">Step</th><th class="num">(4 L, 3 L)</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td class="num">0</td><td class="num">(0, 0)</td><td>Start</td></tr>
+            <tr><td class="num">1</td><td class="num">(0, 3)</td><td>Fill 3 L jug</td></tr>
+            <tr><td class="num">2</td><td class="num">(3, 0)</td><td>Pour 3 L into 4 L</td></tr>
+            <tr><td class="num">3</td><td class="num">(3, 3)</td><td>Fill 3 L jug</td></tr>
+            <tr><td class="num">4</td><td class="num">(4, 2)</td><td>Pour 3 L into 4 L until 4 L is full</td></tr>
+            <tr><td class="num">5</td><td class="num">(0, 2)</td><td>Empty 4 L jug</td></tr>
+            <tr class="win"><td class="num">6</td><td class="num">(2, 0)</td><td>Pour 3 L into 4 L. Goal reached.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Missionaries and cannibals</h3>
+      <p>Three missionaries and three cannibals must cross a river with a boat that holds one or two people.
+      Cannibals must never outnumber missionaries on either bank where missionaries are present.</p>
+      <ul>
+        <li><strong>State</strong>: <code>(M, C, B)</code> = missionaries, cannibals and boat on the left bank. Initial <code>(3,3,1)</code>, goal <code>(0,0,0)</code>.</li>
+        <li><strong>Actions</strong>: carry (1,0), (2,0), (0,1), (0,2) or (1,1) across.</li>
+        <li>The shortest solution takes <strong>11 crossings</strong>.</li>
+      </ul>
+
+      <h3>Route finding (Romania)</h3>
+      <p>States are cities, actions are "drive to a neighbouring city", path cost is road distance.
+      Arad → Bucharest is the running example for search algorithms in Unit II.</p>
+
+      <h3>Real-world problems</h3>
+      <div class="cards">
+        <div class="card"><h5>Route finding</h5><p>GPS navigation, airline trip planning, network packet routing.</p></div>
+        <div class="card"><h5>Touring / TSP</h5><p>Visit every city exactly once at minimum cost. NP-hard.</p></div>
+        <div class="card"><h5>VLSI layout</h5><p>Place millions of components on a chip, minimising area and wire length.</p></div>
+        <div class="card"><h5>Robot navigation</h5><p>Continuous state space with many degrees of freedom.</p></div>
+        <div class="card"><h5>Assembly sequencing</h5><p>Find the order in which to assemble parts of an object.</p></div>
+        <div class="card"><h5>Protein design</h5><p>Find an amino-acid sequence that folds into a desired 3-D shape.</p></div>
+      </div>
+    </section>
+
+    <!-- CASES -->
+    <section id="cases">
+      <h2><span class="num">★</span>Case studies &amp; scenarios</h2>
+      <p>Try each one on paper first, then open the model answer.</p>
+      <div class="toolbar">
+        <button type="button" id="openAll">Show all answers</button>
+        <button type="button" id="closeAll">Hide all answers</button>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 1 · Smart traffic signal</span>
+        <p class="q">A city wants an AI system that controls the traffic lights at a busy junction using cameras, to reduce waiting time. Give the PEAS, classify the environment and suggest a suitable agent type.</p>
+        <details><summary>Model answer</summary><div>
+          <div class="tbl"><table><tbody>
+            <tr><th>P</th><td>Average waiting time, queue length, accidents, priority for ambulances</td></tr>
+            <tr><th>E</th><td>Junction, vehicles, pedestrians, weather, time of day</td></tr>
+            <tr><th>A</th><td>Signal lights (red/yellow/green), countdown timer display</td></tr>
+            <tr><th>S</th><td>CCTV cameras, induction-loop sensors, emergency vehicle GPS/siren detection</td></tr>
+          </tbody></table></div>
+          <p><strong>Environment:</strong> partially observable (fog, occluded lanes), multi-agent (drivers), stochastic (driver behaviour is unpredictable), sequential (a long green now builds a queue on the other road), dynamic, continuous, known rules.</p>
+          <p><strong>Agent type:</strong> a <strong>utility-based learning agent</strong>.
+          A simple reflex agent with fixed timers cannot adapt to traffic.
+          The goals conflict (main road vs side road, cars vs pedestrians), so a utility function is needed to balance them.
+          Traffic patterns change over months, so a learning element should tune the timings from feedback.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 2 · Online exam proctoring</span>
+        <p class="q">A university uses webcam AI to flag cheating during online exams. Give the PEAS and environment, and justify the agent type.</p>
+        <details><summary>Model answer</summary><div>
+          <div class="tbl"><table><tbody>
+            <tr><th>P</th><td>Cheating cases correctly flagged, few false alarms, privacy compliance</td></tr>
+            <tr><th>E</th><td>Student, room, laptop, exam software</td></tr>
+            <tr><th>A</th><td>Warning pop-ups, reports to invigilator, screen lock</td></tr>
+            <tr><th>S</th><td>Webcam, microphone, screen capture, keystrokes, browser tab-switch events</td></tr>
+          </tbody></table></div>
+          <p><strong>Environment:</strong> partially observable (camera sees only part of the room), multi-agent in an adversarial sense (a cheating student acts against the agent), stochastic, sequential over the session, dynamic, continuous (video).</p>
+          <p><strong>Agent type:</strong> at least <strong>model-based reflex</strong>, because a single frame is not enough; it must remember "the student looked away 5 times in 2 minutes".
+          Ideally a <strong>learning agent</strong> so that invigilator feedback on false alarms reduces them over time.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 3 · Agricultural drone</span>
+        <p class="q">A drone sprays pesticide only on the infected parts of a field. Design the agent.</p>
+        <details><summary>Model answer</summary><div>
+          <div class="tbl"><table><tbody>
+            <tr><th>P</th><td>% of infected area treated, pesticide used, battery used, crop damage avoided</td></tr>
+            <tr><th>E</th><td>Field, crops, wind, obstacles (trees, poles), other drones</td></tr>
+            <tr><th>A</th><td>Propellers, spray nozzle, camera gimbal</td></tr>
+            <tr><th>S</th><td>Multispectral camera, GPS, wind sensor, altimeter, battery sensor</td></tr>
+          </tbody></table></div>
+          <p><strong>Environment:</strong> partially observable, single agent (or cooperative multi-agent with a drone fleet), stochastic (wind), sequential, dynamic, continuous.</p>
+          <p><strong>Agent type:</strong> <strong>goal-based + utility-based</strong>.
+          It must plan a path covering all infected patches (goal) while minimising pesticide and battery (utility).
+          <strong>Problem formulation:</strong> state = (position, battery, tank level, set of untreated patches); actions = fly to next patch, spray, return to base; goal = no untreated patch left; path cost = distance + pesticide used.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 4 · Oscillating vacuum</span>
+        <p class="q">A simple reflex vacuum cleaner with no location sensor keeps moving Left-Right forever in a clean room. Why does this happen, and how would you fix it?</p>
+        <details><summary>Model answer</summary><div>
+          <p>The agent only perceives <code>[Clean]</code> and cannot tell whether it is in A or B.
+          The same rule fires every time, so it loops forever.
+          This is the classic failure of simple reflex agents in a <strong>partially observable</strong> environment.</p>
+          <p><strong>Fix 1:</strong> randomise the move (Left or Right with probability 0.5); it will eventually cover both squares.</p>
+          <p><strong>Fix 2 (better):</strong> use a <strong>model-based reflex agent</strong> that remembers which squares it has already cleaned and does <code>NoOp</code> once all are clean.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 5 · Is it rational?</span>
+        <p class="q">A self-driving car brakes hard for a plastic bag on the road and is rear-ended. Was its action rational?</p>
+        <details><summary>Model answer</summary><div>
+          <p>Rationality is judged on <strong>expected</strong> performance given the <strong>percept sequence</strong>, not on the actual outcome.
+          If the percepts could not distinguish the bag from a small animal or child, braking maximised expected safety, so the action was <strong>rational but not omniscient</strong>.</p>
+          <p>However, a better design would <strong>gather more information</strong> (LIDAR density, object tracking over frames), weigh the risk of the car behind in its utility function, and <strong>learn</strong> from such cases.</p>
+        </div></details>
+      </div>
+
+      <div class="case">
+        <span class="lbl">Case 6 · Hospital triage chatbot</span>
+        <p class="q">A hospital deploys a chatbot that asks patients about symptoms and decides whether they should see a doctor today, book a later appointment, or go to emergency. Classify the environment and pick an agent type.</p>
+        <details><summary>Model answer</summary><div>
+          <p><strong>PEAS:</strong> P = correct urgency level, patient safety, waiting time, doctor workload; E = patients, hospital schedule, doctors; A = questions displayed, recommendations, appointment booking; S = typed or spoken answers, vitals from wearables, medical records.</p>
+          <p><strong>Environment:</strong> partially observable (patients may describe symptoms wrongly), single agent (patient is part of the environment), stochastic, sequential (each answer decides the next question), static during a conversation, discrete (question choices) but symptoms may be continuous values.</p>
+          <p><strong>Agent type:</strong> <strong>utility-based</strong>, because missing an emergency costs far more than an extra visit, so outcomes must be weighed, not just a yes/no goal.
+          Add <strong>learning</strong> from doctors' final diagnoses.</p>
+        </div></details>
+      </div>
+
+      <div class="tip">
+        <b class="lbl">Answer template for any scenario</b>
+        <ol>
+          <li>One line: who the agent is and what it is trying to do.</li>
+          <li>PEAS table.</li>
+          <li>Environment classification with a short reason for each property.</li>
+          <li>Agent type chosen, and why simpler types fail.</li>
+          <li>Problem formulation (state, actions, transition, goal, cost) if planning is involved.</li>
+          <li>Challenges and ethics (privacy, bias, safety) for extra marks.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- revision -->
+    <section id="revision">
+      <h2><span class="num">12</span>Quick revision (2-mark answers)</h2>
+      <ul class="qr">
+        <li><b>AI:</b> study of agents that receive percepts and act to maximise a performance measure.</li>
+        <li><b>Turing Test:</b> behavioural test of machine intelligence proposed by Alan Turing in 1950.</li>
+        <li><b>Agent function vs program:</b> the function is an abstract mapping; the program is its implementation.</li>
+        <li><b>Rational agent:</b> maximises expected performance given percepts and prior knowledge.</li>
+        <li><b>Omniscience:</b> knowing actual outcomes; impossible and not required for rationality.</li>
+        <li><b>Autonomy:</b> behaviour determined by the agent's own experience.</li>
+        <li><b>PEAS:</b> Performance measure, Environment, Actuators, Sensors.</li>
+        <li><b>Semi-dynamic:</b> environment doesn't change with time but the score does (chess with a clock).</li>
+        <li><b>Episodic:</b> each decision is independent of earlier ones (defect detection on a conveyor).</li>
+        <li><b>Utility function:</b> maps a state to a real number describing how desirable it is.</li>
+        <li><b>Abstraction:</b> removing detail from a representation to make problem solving tractable.</li>
+        <li><b>Dartmouth 1956:</b> birth of AI; term coined by John McCarthy.</li>
+        <li><b>Open-loop:</b> executing a plan while ignoring percepts.</li>
+        <li><b>State space:</b> set of all states reachable from the initial state.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer class="end">
+  <span>BCS701 · Unit I notes · Reference: Russell &amp; Norvig, AIMA 4th ed.</span>
+  <a href="unit2.html">Continue to Unit II: Problem Solving &amp; Search →</a>
+</footer>
+
+<script>
+  document.getElementById('openAll').addEventListener('click', () => document.querySelectorAll('.case details').forEach(d => d.open = true));
+  document.getElementById('closeAll').addEventListener('click', () => document.querySelectorAll('.case details').forEach(d => d.open = false));
+</script>
+</body>
+</html>
